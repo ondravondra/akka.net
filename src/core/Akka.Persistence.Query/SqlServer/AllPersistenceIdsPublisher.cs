@@ -8,19 +8,17 @@ namespace Akka.Persistence.Query.SqlServer
     {
         private readonly bool _liveQuery;
         private readonly int _maxBufSize;
-        private readonly string _writeJournalPluginId;
         private readonly ILoggingAdapter _log = Context.GetLogger();
         private readonly DeliverBuffer<string> _deliveryBuffer;
 
-        // TODO: fix this
-        private IActorRef _journal = null;
+        private readonly IActorRef _journal;
 
         public AllPersistenceIdsPublisher(bool liveQuery, int maxBufSize, string writeJournalPluginId)
         {
             _liveQuery = liveQuery;
             _maxBufSize = maxBufSize;
-            _writeJournalPluginId = writeJournalPluginId;
             _deliveryBuffer = new DeliverBuffer<string>(this);
+            _journal = Persistence.Instance.Apply(Context.System).JournalFor(writeJournalPluginId);
         }
 
         protected override bool Receive(object message)

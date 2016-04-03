@@ -26,14 +26,12 @@ namespace Akka.Persistence.Query.SqlServer
         protected long fromSequenceNr;
         protected long toSequenceNr;
         protected int maxBufSize;
-        protected string writeJournalPluginId;
         private readonly ILoggingAdapter _log = Context.GetLogger();
 
         protected DeliverBuffer<EventEnvelope> _deliveryBuffer;
         protected long curSequenceNo;
 
-        // TODO: fix this
-        protected IActorRef _journal = null;
+        protected IActorRef _journal;
 
         protected AbstractEventsByPersistenceIdPublisher(string persistenceId, long fromSequenceNr, long toSequenceNr, int maxBufSize, string writeJournalPluginId)
         {
@@ -41,9 +39,10 @@ namespace Akka.Persistence.Query.SqlServer
             this.fromSequenceNr = fromSequenceNr;
             this.toSequenceNr = toSequenceNr;
             this.maxBufSize = maxBufSize;
-            this.writeJournalPluginId = writeJournalPluginId;
             _deliveryBuffer = new DeliverBuffer<EventEnvelope>(this);
             curSequenceNo = fromSequenceNr;
+
+            _journal = Persistence.Instance.Apply(Context.System).JournalFor(writeJournalPluginId);
         }
 
         protected override bool Receive(object message)

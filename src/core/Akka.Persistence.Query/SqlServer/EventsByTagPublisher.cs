@@ -31,14 +31,12 @@ namespace Akka.Persistence.Query.SqlServer
         protected long toOffset;
         protected TimeSpan interval;
         protected int maxBufSize;
-        protected string writeJournalPluginId;
         protected long currOffset;
 
         protected DeliverBuffer<EventEnvelope> _deliveryBuffer;
         private readonly ILoggingAdapter _log = Context.GetLogger();
 
-        // TODO: fix this
-        protected IActorRef _journal = null;
+        protected IActorRef _journal;
 
         protected AbstractEventsByTagPublisher(string tag, long fromOffset, long toOffset, TimeSpan interval, int maxBufSize, string writeJournalPluginId)
         {
@@ -47,10 +45,10 @@ namespace Akka.Persistence.Query.SqlServer
             this.toOffset = toOffset;
             this.interval = interval;
             this.maxBufSize = maxBufSize;
-            this.writeJournalPluginId = writeJournalPluginId;
 
             _deliveryBuffer = new DeliverBuffer<EventEnvelope>(this);
             currOffset = fromOffset;
+            _journal = Persistence.Instance.Apply(Context.System).JournalFor(writeJournalPluginId);
         }
 
         protected override bool Receive(object message)
