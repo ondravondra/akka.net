@@ -186,9 +186,7 @@ namespace Akka.Persistence.Snapshot
 
         private T WithInputStream<T>(SnapshotMetadata metadata, Func<Stream, T> p)
         {
-            return
-                WithStream(
-                    new BufferedStream(new FileStream(GetSnapshotFileForWrite(metadata).FullName, FileMode.Open)), p);
+            return WithStream(new BufferedStream(new FileStream(GetSnapshotFileForWrite(metadata).FullName, FileMode.Open)), p);
         }
 
         private T WithStream<T>(Stream stream, Func<Stream, T> p)
@@ -196,7 +194,7 @@ namespace Akka.Persistence.Snapshot
             try
             {
                 var result = p(stream);
-                stream.Close();
+                stream.Dispose();
                 return result;
             }
             finally
