@@ -1,0 +1,101 @@
+﻿[assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute("Akka.Cluster.Metrics.Tests")]
+[assembly: System.Runtime.InteropServices.ComVisibleAttribute(false)]
+[assembly: System.Runtime.InteropServices.GuidAttribute("c24b9777-161f-4e8f-bce9-6f4dba38a8f1")]
+[assembly: System.Runtime.Versioning.TargetFrameworkAttribute(".NETFramework,Version=v4.5", FrameworkDisplayName=".NET Framework 4.5")]
+namespace Akka.Cluster.Metrics
+{
+    public sealed class ClusterMetricsChanged : Akka.Cluster.Metrics.IClusterMetricsEvent
+    {
+        public ClusterMetricsChanged(System.Collections.Immutable.IImmutableSet<Akka.Cluster.Metrics.NodeMetrics> nodeMetrics) { }
+        public System.Collections.Immutable.IImmutableSet<Akka.Cluster.Metrics.NodeMetrics> NodeMetrics { get; }
+    }
+    public class ClusterMetricsExtension : Akka.Actor.IExtension
+    {
+        public ClusterMetricsExtension(Akka.Actor.ExtendedActorSystem system) { }
+        public Akka.Cluster.Metrics.ClusterMetricsSettings Settings { get; }
+        public Akka.Actor.IActorRef Supervisor { get; }
+        public Akka.Actor.ExtendedActorSystem System { get; }
+        public void Subscribe(Akka.Actor.IActorRef metricsListener) { }
+        public void Unsubscribe(Akka.Actor.IActorRef metricsListener) { }
+    }
+    public class ClusterMetricsExtensionProvider : Akka.Actor.ExtensionIdProvider<Akka.Cluster.Metrics.ClusterMetricsExtension>
+    {
+        public ClusterMetricsExtensionProvider() { }
+        public override Akka.Cluster.Metrics.ClusterMetricsExtension CreateExtension(Akka.Actor.ExtendedActorSystem system) { }
+    }
+    public sealed class ClusterMetricsSettings
+    {
+        public ClusterMetricsSettings(Akka.Configuration.Config config) { }
+        public bool CollectorEnabled { get; }
+        public bool CollectorFallback { get; }
+        public System.TimeSpan CollectorGossipInterval { get; }
+        public System.TimeSpan CollectorMovingAverageHalfLife { get; }
+        public string CollectorProvider { get; }
+        public System.TimeSpan CollectorSampleInterval { get; }
+        public string MetricsDispatcher { get; }
+        public System.TimeSpan PeriodicTasksInitialDelay { get; }
+        public string SupervisorName { get; }
+        public Akka.Configuration.Config SupervisorStrategyConfiguration { get; }
+        public string SupervisorStrategyProvider { get; }
+        public static Akka.Configuration.Config DefaultConfig() { }
+    }
+    public class ClusterMetricsStrategy : Akka.Actor.OneForOneStrategy
+    {
+        public ClusterMetricsStrategy(Akka.Configuration.Config config) { }
+        public static Akka.Actor.IDecider MetricsDecider { get; }
+    }
+    public class CollectionStartMessage : Akka.Cluster.Metrics.ICollectionControlMessage
+    {
+        public static Akka.Cluster.Metrics.CollectionStartMessage Instance;
+    }
+    public class CollectionStopMessage : Akka.Cluster.Metrics.ICollectionControlMessage
+    {
+        public static Akka.Cluster.Metrics.CollectionStopMessage Instance;
+    }
+    public sealed class EWMA
+    {
+        public EWMA(double value, double alpha) { }
+        public double Alpha { get; }
+        public double Value { get; }
+        public static double CalculateAlpha(System.TimeSpan halfLife, System.TimeSpan collectInterval) { }
+    }
+    public interface IClusterMetricsEvent { }
+    public interface ICollectionControlMessage { }
+    public interface IMetricsCollector : System.IDisposable
+    {
+        Akka.Cluster.Metrics.NodeMetrics Sample();
+    }
+    public sealed class Metric : Akka.Cluster.Metrics.MetricNumericConverter
+    {
+        public Akka.Cluster.Metrics.EWMA Average { get; }
+        public bool IsSmooth { get; }
+        public string Name { get; }
+        public double SmoothValue { get; }
+        public double Value { get; }
+        public static Akka.Cluster.Metrics.Metric Create(string name, double value, System.Nullable<double> decayFactor = null) { }
+        public static Akka.Cluster.Metrics.EWMA CreateEWMA(double value, System.Nullable<double> decayFactor = null) { }
+        public override bool Equals(object obj) { }
+        public override int GetHashCode() { }
+        public bool SameAs(Akka.Cluster.Metrics.Metric that) { }
+    }
+    public abstract class MetricNumericConverter
+    {
+        protected MetricNumericConverter() { }
+        public static double ConvertNumber(object from) { }
+        public static bool Defined(double value) { }
+    }
+    public sealed class NodeMetrics
+    {
+        public NodeMetrics(Akka.Actor.Address address, long timestamp, System.Collections.Immutable.IImmutableSet<Akka.Cluster.Metrics.Metric> metrics = null) { }
+        public Akka.Actor.Address Address { get; }
+        public System.Collections.Immutable.IImmutableSet<Akka.Cluster.Metrics.Metric> Metrics { get; }
+        public long Timestamp { get; }
+        public Akka.Cluster.Metrics.NodeMetrics Copy(Akka.Actor.Address address = null, System.Nullable<long> timestamp = null, System.Collections.Immutable.IImmutableSet<Akka.Cluster.Metrics.Metric> metrics = null) { }
+        public override bool Equals(object obj) { }
+        protected bool Equals(Akka.Cluster.Metrics.NodeMetrics other) { }
+        public override int GetHashCode() { }
+        public Akka.Cluster.Metrics.NodeMetrics Merge(Akka.Cluster.Metrics.NodeMetrics that) { }
+        public Akka.Cluster.Metrics.Metric Metric(string key) { }
+        public Akka.Cluster.Metrics.NodeMetrics Update(Akka.Cluster.Metrics.NodeMetrics that) { }
+    }
+}

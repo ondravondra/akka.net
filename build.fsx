@@ -215,6 +215,7 @@ Target "CopyOutput" <| fun _ ->
       "core/Akka.Remote"
       "core/Akka.Remote.TestKit"
       "core/Akka.Cluster"
+      "core/Akka.Cluster.Metrics"
       "core/Akka.Cluster.TestKit"
       "core/Akka.MultiNodeTestRunner"
       "core/Akka.Persistence"
@@ -372,6 +373,7 @@ module Nuget =
         | "Akka.Cluster.TestKit" -> ["Akka.Remote.TestKit", release.NugetVersion; "Akka.Cluster", release.NugetVersion]
         | "Akka.Cluster.Sharding" -> ["Akka.Cluster.Tools", preReleaseVersion; "Akka.Persistence", preReleaseVersion]
         | "Akka.Cluster.Tools" -> ["Akka.Cluster", release.NugetVersion]
+        | "Akka.Cluster.Metrics" -> ["Akka.Cluster", release.NugetVersion]
         | "Akka.MultiNodeTestRunner" -> [] // all binaries for the multinodetest runner have to be included locally
         | "Akka.Persistence.TestKit" -> ["Akka.Persistence", preReleaseVersion; "Akka.TestKit.Xunit2", release.NugetVersion]
         | "Akka.Persistence.Query" -> ["Akka.Persistence", preReleaseVersion; "Akka.Streams", preReleaseVersion]

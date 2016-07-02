@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Akka.Cluster;
+using Akka.Cluster.Metrics;
 using Akka.Cluster.Tools.Singleton;
 using Akka.Persistence;
 using Akka.Remote;
@@ -67,6 +68,16 @@ namespace Akka.API.Tests
         public void ApproveClusterTools()
         {
             var assemblyPath = Path.GetFullPath(typeof(ClusterSingletonManager).Assembly.Location);
+            var asm = AssemblyDefinition.ReadAssembly(assemblyPath);
+            var publicApi = Filter(PublicApiGenerator.CreatePublicApiForAssembly(asm));
+            Approvals.Verify(publicApi);
+        }
+
+        [Fact]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public void ApproveClusterMetrics()
+        {
+            var assemblyPath = Path.GetFullPath(typeof(IClusterMetricsEvent).Assembly.Location);
             var asm = AssemblyDefinition.ReadAssembly(assemblyPath);
             var publicApi = Filter(PublicApiGenerator.CreatePublicApiForAssembly(asm));
             Approvals.Verify(publicApi);
