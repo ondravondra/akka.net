@@ -11,7 +11,9 @@ using System.Linq;
 using Akka.Actor;
 using Akka.Event;
 using Akka.TestKit;
+using Akka.Util.Internal;
 using Xunit;
+using FluentAssertions;
 
 namespace Akka.Tests.Event
 {
@@ -58,7 +60,7 @@ namespace Akka.Tests.Event
         }
     }
 
-    internal struct Notification
+    public struct Notification
     {
         public Notification(IActorRef @ref, int payload) : this()
         {
@@ -72,145 +74,286 @@ namespace Akka.Tests.Event
 
     public class EventBusSpec : AkkaSpec
     {
-        internal ActorEventBus<object, Type> _bus;
-
-        protected object _evt;
-        protected Type _classifier;
-        protected IActorRef _subscriber;
+        private readonly ActorEventBus<object, Type> _bus;
+        private readonly IEnumerable<Notification> _events;
+        private readonly Notification _event;
+        private readonly Type _classifier;
+        private readonly IActorRef _subscriber;
 
         public EventBusSpec()
         {
             _bus = new TestActorEventBus();
-            _evt = new Notification(TestActor, 1);
-            _classifier = typeof (Notification);
+            _events = CreateEvents(100);
+            _event = _events.First();
+            _classifier = typeof(Notification);
             _subscriber = TestActor;
         }
 
         [Fact]
-        public void EventBus_allow_subscribers()
+        public void ActorEventBus_must_allow_subscribers()
         {
-            _bus.Subscribe(_subscriber, _classifier).ShouldBe(true);
+            _bus.Subscribe(_subscriber, _classifier).Should().BeTrue();
         }
 
         [Fact]
-        public void EventBus_allow_to_unsubscribe_already_existing_subscribers()
+        public void ActorEventBus_must_allow_to_unsubscribe_already_existing_subscriber()
         {
-            _bus.Subscribe(_subscriber, _classifier).ShouldBe(true);
-            _bus.Unsubscribe(_subscriber, _classifier).ShouldBe(true);
+            _bus.Subscribe(_subscriber, _classifier).Should().BeTrue();
+            _bus.Unsubscribe(_subscriber, _classifier).Should().BeTrue();
         }
 
         [Fact]
-        public void EventBus_not_allow_to_unsubscribe_not_existing_subscribers()
+        public void ActorEventBus_must_not_allow_to_unsubscribe_not_existing_subscriber()
         {
-            _bus.Unsubscribe(_subscriber, _classifier).ShouldBe(false);
+            var sub = CreateSubscriber(TestActor);
+            _bus.Unsubscribe(sub, _classifier).Should().BeFalse();
+            DisposeSubscriber(Sys, sub);
         }
 
         [Fact]
-        public void EventBus_not_allow_to_subscribe_same_subscriber_to_same_channel_twice()
+        public void ActorEventBus_must_not_allow_to_subscribe_same_subscriber_to_same_channel_twice()
         {
-            _bus.Subscribe(_subscriber, _classifier).ShouldBe(true);
-            _bus.Subscribe(_subscriber, _classifier).ShouldBe(false);
-            _bus.Unsubscribe(_subscriber, _classifier).ShouldBe(true);
+            _bus.Subscribe(_subscriber, _classifier).Should().BeTrue();
+            _bus.Subscribe(_subscriber, _classifier).Should().BeFalse();
+            _bus.Unsubscribe(_subscriber, _classifier).Should().BeTrue();
         }
 
         [Fact]
-        public void EventBus_not_allow_to_unsubscribe_same_subscriber_from_the_same_channel_twice()
+        public void ActorEventBus_must_not_allow_to_unsubscribe_same_subscriber_from_the_same_channel_twice()
         {
-            _bus.Subscribe(_subscriber, _classifier).ShouldBe(true);
-            _bus.Unsubscribe(_subscriber, _classifier).ShouldBe(true);
-            _bus.Unsubscribe(_subscriber, _classifier).ShouldBe(false);
+            _bus.Subscribe(_subscriber, _classifier).Should().BeTrue();
+            _bus.Unsubscribe(_subscriber, _classifier).Should().BeTrue();
+            _bus.Unsubscribe(_subscriber, _classifier).Should().BeFalse();
         }
 
         [Fact]
-        public void EventBus_allow_to_add_multiple_subscribers()
+        public void ActorEventBus_must_allow_to_add_multiple_subscribers()
         {
-            const int max = 10;
-            IEnumerable<IActorRef> subscribers = Enumerable.Range(0, max).Select(_ => CreateSubscriber(TestActor)).ToList();
-            foreach (var subscriber in subscribers)
-            {
-                _bus.Subscribe(subscriber, _classifier).ShouldBe(true);
-            }
-            foreach (var subscriber in subscribers)
-            {
-                _bus.Unsubscribe(subscriber, _classifier).ShouldBe(true);
-                DisposeSubscriber(subscriber);
-            }
+            var subscribers = Enumerable.Range(0, 10).Select(_ => CreateSubscriber(TestActor)).ToList();
+            var events = CreateEvents(10);
+            var classifiers = events.Select(GetClassifierFor).ToList();
 
+            subscribers.Zip(classifiers, Tuple.Create).ForEach(t => _bus.Subscribe(t.Item1, t.Item2).Should().BeTrue());
+            subscribers.Zip(classifiers, Tuple.Create).ForEach(t => _bus.Unsubscribe(t.Item1, t.Item2).Should().BeTrue());
+
+            subscribers.ForEach(c => DisposeSubscriber(Sys, c));
         }
 
         [Fact]
-        public void EventBus_allow_publishing_with_empty_subscribers_list()
+        public void ActorEventBus_must_publishing_events_without_any_subscribers_shouldnot_be_a_problem()
         {
-            _bus.Publish(new object());
+            _bus.Publish(_event);
         }
 
         [Fact]
-        public void EventBus_publish_to_the_only_subscriber()
+        public void ActorEventBus_must_publish_to_the_only_subscriber()
         {
             _bus.Subscribe(_subscriber, _classifier);
-            _bus.Publish(_evt);
-            ExpectMsg(_evt);
-            ExpectNoMsg(TimeSpan.FromSeconds(1));
-            _bus.Unsubscribe(_subscriber);
-        }
-
-        [Fact]
-        public void EventBus_publish_to_the_only_subscriber_multiple_times()
-        {
-            _bus.Subscribe(_subscriber, _classifier);
-            _bus.Publish(_evt);
-            _bus.Publish(_evt);
-            _bus.Publish(_evt);
-
-            ExpectMsg(_evt);
-            ExpectMsg(_evt);
-            ExpectMsg(_evt);
-
-            ExpectNoMsg(TimeSpan.FromSeconds(1));
+            _bus.Publish(_event);
+            ExpectMsg(_event);
+            ExpectNoMsg(1.Seconds());
             _bus.Unsubscribe(_subscriber, _classifier);
         }
 
         [Fact]
-        public void EventBus_not_publish_event_to_unindented_subscribers()
+        public void ActorEventBus_must_publish_to_the_only_subscriber_multiple_times()
+        {
+            _bus.Subscribe(_subscriber, _classifier);
+            _bus.Publish(_event);
+            _bus.Publish(_event);
+            _bus.Publish(_event);
+            ExpectMsg(_event);
+            ExpectMsg(_event);
+            ExpectMsg(_event);
+            ExpectNoMsg(1.Seconds());
+            _bus.Unsubscribe(_subscriber, _classifier);
+        }
+
+        [Fact]
+        public void ActorEventBus_must_publish_the_given_event_to_all_intended_subscribers()
+        {
+            var range = Enumerable.Range(0, 10).ToList();
+            var subscribers = range.Select(c => CreateSubscriber(TestActor)).ToList();
+            subscribers.ForEach(s => _bus.Subscribe(s, _classifier).Should().BeTrue());
+            _bus.Publish(_event);
+            range.ForEach(_ => ExpectMsg(_event));
+            subscribers.ForEach(s =>
+            {
+                _bus.Unsubscribe(s, _classifier).Should().BeTrue();
+                DisposeSubscriber(Sys, s);
+            });
+        }
+
+        [Fact]
+        public void ActorEventBus_must_not_publish_the_given_event_to_any_other_subscribers_than_the_intended_ones()
         {
             var otherSubscriber = CreateSubscriber(TestActor);
-            var otherClassifier = typeof (int);
-
+            var otherClassifier = GetClassifierFor(_events.Drop(1).First());
             _bus.Subscribe(_subscriber, _classifier);
             _bus.Subscribe(otherSubscriber, otherClassifier);
-            _bus.Publish(_evt);
-
-            ExpectMsg(_evt);
-
+            _bus.Publish(_event);
+            ExpectMsg(_event);
             _bus.Unsubscribe(_subscriber, _classifier);
             _bus.Unsubscribe(otherSubscriber, otherClassifier);
-            ExpectNoMsg(TimeSpan.FromSeconds(1));
+            ExpectNoMsg(1.Seconds());
         }
 
         [Fact]
-        public void EventBus_not_publish_event_to_former_subscriber()
+        public void ActorEventBus_must_not_publish_event_to_former_subscriber()
         {
             _bus.Subscribe(_subscriber, _classifier);
             _bus.Unsubscribe(_subscriber, _classifier);
-            _bus.Publish(_evt);
-            ExpectNoMsg(TimeSpan.FromSeconds(1));
+            _bus.Publish(_event);
+            ExpectNoMsg(1.Seconds());
         }
 
         [Fact]
-        public void EventBus_cleanup_subscribers()
+        public void ActorEventBus_must_cleanup_subscribers()
         {
-            DisposeSubscriber(_subscriber);
+            DisposeSubscriber(Sys, _subscriber);
         }
 
-        protected IActorRef CreateSubscriber(IActorRef actor)
+        [Fact]
+        public void ActorEventBus_must_unsubscribe_subscriber_when_it_terminates()
         {
-            return Sys.ActorOf(Props.Create(() => new TestActorWrapperActor(actor)));
+            var a1 = CreateSubscriber(Sys.DeadLetters);
+            var subs = CreateSubscriber(TestActor);
+            Func<int, Notification> m = i => new Notification(a1, i);
+            var p = CreateTestProbe();
+            Sys.EventStream.Subscribe(p.Ref, typeof(Debug));
+
+            // TODO: JVM uses a1 instead of _classifier
+            _bus.Subscribe(subs, _classifier);
+            _bus.Publish(m(1));
+            ExpectMsg(m(1));
+
+            Watch(subs);
+            subs.Tell(PoisonPill.Instance);
+            ExpectTerminated(subs);
+            ExpectUnsubscribedByUnsubscriber(p, subs);
+
+            _bus.Publish(m(2));
+            ExpectNoMsg(1.Seconds());
+
+            DisposeSubscriber(Sys, subs);
+            DisposeSubscriber(Sys, a1);
         }
 
-        protected void DisposeSubscriber(IActorRef subscriber)
+        [Fact]
+        public void ActorEventBus_must_keep_subscriber_even_if_its_subscription_actors_have_died()
         {
-            Sys.Stop(subscriber);
+            // Deaths of monitored actors should not influence the subscription.
+            // For example: one might still want to monitor messages classified to A
+            // even though it died, and handle these in some way.
+            var a1 = CreateSubscriber(Sys.DeadLetters);
+            var subs = CreateSubscriber(TestActor);
+            Func<int, Notification> m = i => new Notification(a1, i);
+
+            // TODO: JVM uses a1 instead of _classifier
+            _bus.Subscribe(subs, _classifier).Should().Be(true);
+
+            _bus.Publish(m(1));
+            ExpectMsg(m(1));
+
+            Watch(a1);
+            a1.Tell(PoisonPill.Instance);
+            ExpectTerminated(a1);
+
+            _bus.Publish(m(2));
+            ExpectMsg(m(2));
+
+            DisposeSubscriber(Sys, subs);
+            DisposeSubscriber(Sys, a1);
+        }
+
+        [Fact]
+        public void ActorEventBus_must_unregister_subscriber_only_after_it_unsubscribes_from_all_of_its_subscriptions()
+        {
+            var a1 = CreateSubscriber(Sys.DeadLetters);
+            var a2 = CreateSubscriber(Sys.DeadLetters);
+            var subs = CreateSubscriber(TestActor);
+            Func<int, Notification> m1 = i => new Notification(a1, i);
+            Func<int, Notification> m2 = i => new Notification(a2, i);
+
+            var p = CreateTestProbe();
+            Sys.EventStream.Subscribe(p.Ref, typeof(Debug));
+
+            // TODO: JVM uses a1, a2 instead of _classifier
+            _bus.Subscribe(subs, _classifier).Should().Be(true);
+            _bus.Subscribe(subs, _classifier).Should().Be(true);
+
+            _bus.Publish(m1(1));
+            _bus.Publish(m2(1));
+            ExpectMsg(m1(1));
+            ExpectMsg(m2(1));
+
+            _bus.Unsubscribe(subs, _classifier);
+            _bus.Publish(m1(2));
+            ExpectNoMsg(1.Seconds());
+            _bus.Publish(m2(2));
+            ExpectMsg(m2(2));
+
+            _bus.Unsubscribe(subs, _classifier);
+            ExpectUnregisterFromUnsubscriber(p, subs);
+            _bus.Publish(m1(3));
+            _bus.Publish(m2(3));
+            ExpectNoMsg(1.Seconds());
+
+            DisposeSubscriber(Sys, subs);
+            DisposeSubscriber(Sys, a1);
+            DisposeSubscriber(Sys, a2);
+        }
+
+        private IEnumerable<Notification> CreateEvents(int numberOfEvents)
+        {
+            return Enumerable.Range(0, numberOfEvents).Select(c => new Notification(CreateTestProbe().Ref, c));
+        }
+
+        private IActorRef CreateSubscriber(IActorRef pipeTo)
+        {
+            return Sys.ActorOf(Props.Create(() => new TestActorWrapperActor(pipeTo)));
+        }
+
+        private Type GetClassifierFor(Notification @event)
+        {
+            this._bus.Ge
+            // TODO: not sure here
+            return @event.Ref.GetType();
+        }
+
+        private void DisposeSubscriber(ActorSystem sys, IActorRef subscriber)
+        {
+            sys.Stop(subscriber);
+        }
+
+        private void ExpectUnregisterFromUnsubscriber(TestProbe p, IActorRef a)
+        {
+            string expectedMessage = $"unregistered watch of {a} in {_bus}";
+            p.FishForMessage(message =>
+            {
+                var debug = message as Debug;
+                if (debug?.Message != null && debug.Message.Equals(expectedMessage))
+                {
+                    return true;
+                }
+
+                return false;
+            }, 1.Seconds(), hint: expectedMessage);
+        }
+
+        private void ExpectUnsubscribedByUnsubscriber(TestProbe p, IActorRef a)
+        {
+            string expectedMessage = $"actor {a} has terminated, unsubscribing it from {_bus}";
+            p.FishForMessage(message =>
+            {
+                var debug = message as Debug;
+                if (debug?.Message != null && debug.Message.Equals(expectedMessage))
+                {
+                    return true;
+                }
+
+                return false;
+            }, 1.Seconds(), hint: expectedMessage);
         }
     }
 }
-
