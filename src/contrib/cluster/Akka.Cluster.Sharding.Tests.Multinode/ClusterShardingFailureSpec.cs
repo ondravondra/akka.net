@@ -16,7 +16,7 @@ using Akka.Persistence.Journal;
 using Akka.Remote.TestKit;
 using Akka.Remote.Transport;
 
-namespace Akka.Cluster.Sharding.Tests
+namespace Akka.Cluster.Sharding.Tests.MultiNode
 {
     public class ClusterShardingFailureSpecConfig : MultiNodeConfig
     {

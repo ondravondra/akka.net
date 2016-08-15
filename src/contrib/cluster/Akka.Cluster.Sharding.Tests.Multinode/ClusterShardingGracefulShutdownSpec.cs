@@ -16,7 +16,7 @@ using Akka.Persistence.Journal;
 using Akka.Remote.TestKit;
 using Xunit;
 
-namespace Akka.Cluster.Sharding.Tests
+namespace Akka.Cluster.Sharding.Tests.MultiNode
 {
     public class ClusterShardingGracefulShutdownSpecConfig : MultiNodeConfig
     {
