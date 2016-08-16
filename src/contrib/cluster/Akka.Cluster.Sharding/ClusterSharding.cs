@@ -14,51 +14,17 @@ using Akka.Cluster.Tools.Singleton;
 using Akka.Configuration;
 using Akka.Dispatch;
 using Akka.Pattern;
+using Msg = System.Object;
+using EntityId = System.String;
+using ShardId = System.String;
 
 namespace Akka.Cluster.Sharding
 {
-    using Msg = Object;
-    using EntityId = String;
-    using ShardId = String;
-
-    /// <summary>
-    /// Marker trait for remote messages and persistent events/snapshots with special serializer.
-    /// </summary>
-    public interface IClusterShardingSerializable { }
-
     public class ClusterShardingExtensionProvider : ExtensionIdProvider<ClusterSharding>
     {
         public override ClusterSharding CreateExtension(ExtendedActorSystem system)
         {
-            var extension = new ClusterSharding(system);
-            return extension;
-        }
-    }
-
-    /// <summary>
-    /// Convenience implementation of <see cref="IMessageExtractor"/> that 
-    /// construct ShardId based on the <see cref="object.GetHashCode"/> of the EntityId. 
-    /// The number of unique shards is limited by the given MaxNumberOfShards.
-    /// </summary>
-    public abstract class HashCodeMessageExtractor : IMessageExtractor
-    {
-        public readonly int MaxNumberOfShards;
-
-        protected HashCodeMessageExtractor(int maxNumberOfShards)
-        {
-            MaxNumberOfShards = maxNumberOfShards;
-        }
-
-        public abstract string EntityId(object message);
-
-        public virtual object EntityMessage(object message)
-        {
-            return message;
-        }
-
-        public virtual string ShardId(object message)
-        {
-            return (Math.Abs(EntityId(message).GetHashCode())%MaxNumberOfShards).ToString();
+            return new ClusterSharding(system);
         }
     }
 
@@ -189,7 +155,7 @@ namespace Akka.Cluster.Sharding
     public class ClusterSharding : IExtension
     {
         private readonly Lazy<IActorRef> _guardian;
-        private readonly ConcurrentDictionary<string, IActorRef> _regions = new ConcurrentDictionary<string, IActorRef>();
+        private readonly ConcurrentDictionary<string, IActorRef> _regions;
         private readonly ExtendedActorSystem _system;
         private readonly Cluster _cluster;
 
@@ -203,9 +169,9 @@ namespace Akka.Cluster.Sharding
             _system = system;
             _system.Settings.InjectTopLevelFallback(DefaultConfig());
             _system.Settings.InjectTopLevelFallback(ClusterSingletonManager.DefaultConfig());
-            _cluster = Cluster.Get(_system);
-            Settings = ClusterShardingSettings.Create(system);
 
+            _cluster = Cluster.Get(_system);
+            _regions = new ConcurrentDictionary<string, IActorRef>();
             _guardian = new Lazy<IActorRef>(() =>
             {
                 var guardianName = system.Settings.Config.GetString("akka.cluster.sharding.guardian-name");
@@ -214,11 +180,6 @@ namespace Akka.Cluster.Sharding
                 return system.ActorOf(Props.Create(() => new ClusterShardingGuardian()).WithDispatcher(dispatcher), guardianName);
             });
         }
-
-        /// <summary>
-        /// Gets object representing settings for the current cluster sharding plugin.
-        /// </summary>
-        public ClusterShardingSettings Settings { get; }
 
         /// <summary>
         /// Default HOCON settings for cluster sharding.
@@ -254,7 +215,7 @@ namespace Akka.Cluster.Sharding
         /// </param>
         /// <returns>The actor ref of the <see cref="Sharding.ShardRegion"/> that is to be responsible for the shard.</returns>
         public IActorRef Start(
-            string typeName, //TODO: change type name to type instance?
+            string typeName,
             Props entityProps,
             ClusterShardingSettings settings,
             IdExtractor idExtractor,
@@ -262,15 +223,7 @@ namespace Akka.Cluster.Sharding
             IShardAllocationStrategy allocationStrategy,
             object handOffStopMessage)
         {
-            RequireClusterRole(settings.Role);
-
-            var timeout = _system.Settings.CreationTimeout;
-            var startMsg = new ClusterShardingGuardian.Start(typeName, entityProps, settings, idExtractor, shardResolver, allocationStrategy, handOffStopMessage);
-
-            var started = _guardian.Value.Ask<ClusterShardingGuardian.Started>(startMsg, timeout).Result;
-            var shardRegion = started.ShardRegion;
-            _regions.TryAdd(typeName, shardRegion);
-            return shardRegion;
+            return StartAsync(typeName, entityProps, settings, idExtractor, shardResolver, allocationStrategy, handOffStopMessage).Result;
         }
 
         /// <summary>
@@ -298,7 +251,7 @@ namespace Akka.Cluster.Sharding
         /// </param>
         /// <returns>The actor ref of the <see cref="Sharding.ShardRegion"/> that is to be responsible for the shard.</returns>
         public async Task<IActorRef> StartAsync(
-            string typeName, //TODO: change type name to type instance?
+            string typeName,
             Props entityProps,
             ClusterShardingSettings settings,
             IdExtractor idExtractor,
@@ -337,16 +290,13 @@ namespace Akka.Cluster.Sharding
         /// </param>
         /// <returns>The actor ref of the <see cref="Sharding.ShardRegion"/> that is to be responsible for the shard.</returns>
         public IActorRef Start(
-            string typeName, //TODO: change type name to type instance?
+            string typeName,
             Props entityProps,
             ClusterShardingSettings settings,
             IdExtractor idExtractor,
             ShardResolver shardResolver)
         {
-            var allocationStrategy = new LeastShardAllocationStrategy(
-                Settings.TunningParameters.LeastShardAllocationRebalanceThreshold,
-                Settings.TunningParameters.LeastShardAllocationMaxSimultaneousRebalance);
-            return Start(typeName, entityProps, settings, idExtractor, shardResolver, allocationStrategy, PoisonPill.Instance);
+            return StartAsync(typeName, entityProps, settings, idExtractor, shardResolver).Result;
         }
 
         /// <summary>
@@ -369,15 +319,16 @@ namespace Akka.Cluster.Sharding
         /// </param>
         /// <returns>The actor ref of the <see cref="Sharding.ShardRegion"/> that is to be responsible for the shard.</returns>
         public Task<IActorRef> StartAsync(
-            string typeName, //TODO: change type name to type instance?
+            string typeName,
             Props entityProps,
             ClusterShardingSettings settings,
             IdExtractor idExtractor,
             ShardResolver shardResolver)
         {
             var allocationStrategy = new LeastShardAllocationStrategy(
-                Settings.TunningParameters.LeastShardAllocationRebalanceThreshold,
-                Settings.TunningParameters.LeastShardAllocationMaxSimultaneousRebalance);
+                settings.TunningParameters.LeastShardAllocationRebalanceThreshold,
+                settings.TunningParameters.LeastShardAllocationMaxSimultaneousRebalance);
+
             return StartAsync(typeName, entityProps, settings, idExtractor, shardResolver, allocationStrategy, PoisonPill.Instance);
         }
 
@@ -400,13 +351,15 @@ namespace Akka.Cluster.Sharding
         /// graceful shutdown of a <see cref="Sharding.ShardRegion"/>, e.g. <see cref="PoisonPill"/>.
         /// </param>
         /// <returns>The actor ref of the <see cref="Sharding.ShardRegion"/> that is to be responsible for the shard.</returns>
-        public IActorRef Start(string typeName, Props entityProps, ClusterShardingSettings settings,
-            IMessageExtractor messageExtractor, IShardAllocationStrategy allocationStrategy, object handOffMessage)
+        public IActorRef Start(
+            string typeName,
+            Props entityProps,
+            ClusterShardingSettings settings,
+            IMessageExtractor messageExtractor,
+            IShardAllocationStrategy allocationStrategy,
+            object handOffMessage)
         {
-            IdExtractor idExtractor = messageExtractor.ToIdExtractor();
-            ShardResolver shardResolver = messageExtractor.ShardId;
-
-            return Start(typeName, entityProps, settings, idExtractor, shardResolver, allocationStrategy, handOffMessage);
+            return StartAsync(typeName, entityProps, settings, messageExtractor, allocationStrategy, handOffMessage).Result;
         }
 
         /// <summary>
@@ -428,8 +381,13 @@ namespace Akka.Cluster.Sharding
         /// graceful shutdown of a <see cref="Sharding.ShardRegion"/>, e.g. <see cref="PoisonPill"/>.
         /// </param>
         /// <returns>The actor ref of the <see cref="Sharding.ShardRegion"/> that is to be responsible for the shard.</returns>
-        public Task<IActorRef> StartAsync(string typeName, Props entityProps, ClusterShardingSettings settings,
-            IMessageExtractor messageExtractor, IShardAllocationStrategy allocationStrategy, object handOffMessage)
+        public Task<IActorRef> StartAsync(
+            string typeName,
+            Props entityProps,
+            ClusterShardingSettings settings,
+            IMessageExtractor messageExtractor,
+            IShardAllocationStrategy allocationStrategy,
+            object handOffMessage)
         {
             IdExtractor idExtractor = messageExtractor.ToIdExtractor();
             ShardResolver shardResolver = messageExtractor.ShardId;
@@ -451,17 +409,13 @@ namespace Akka.Cluster.Sharding
         /// Functions to extract the entity id, shard id, and the message to send to the entity from the incoming message.
         /// </param>
         /// <returns>The actor ref of the <see cref="Sharding.ShardRegion"/> that is to be responsible for the shard.</returns>
-        public IActorRef Start(string typeName, Props entityProps, ClusterShardingSettings settings,
+        public IActorRef Start(
+            string typeName,
+            Props entityProps,
+            ClusterShardingSettings settings,
             IMessageExtractor messageExtractor)
         {
-            return Start(typeName,
-                entityProps,
-                settings,
-                messageExtractor,
-                new LeastShardAllocationStrategy(
-                    Settings.TunningParameters.LeastShardAllocationRebalanceThreshold,
-                    Settings.TunningParameters.LeastShardAllocationMaxSimultaneousRebalance),
-                PoisonPill.Instance);
+            return StartAsync(typeName, entityProps, settings, messageExtractor).Result;
         }
 
         /// <summary>
@@ -478,7 +432,10 @@ namespace Akka.Cluster.Sharding
         /// Functions to extract the entity id, shard id, and the message to send to the entity from the incoming message.
         /// </param>
         /// <returns>The actor ref of the <see cref="Sharding.ShardRegion"/> that is to be responsible for the shard.</returns>
-        public Task<IActorRef> StartAsync(string typeName, Props entityProps, ClusterShardingSettings settings,
+        public Task<IActorRef> StartAsync(
+            string typeName,
+            Props entityProps,
+            ClusterShardingSettings settings,
             IMessageExtractor messageExtractor)
         {
             return StartAsync(typeName,
@@ -486,8 +443,8 @@ namespace Akka.Cluster.Sharding
                 settings,
                 messageExtractor,
                 new LeastShardAllocationStrategy(
-                    Settings.TunningParameters.LeastShardAllocationRebalanceThreshold,
-                    Settings.TunningParameters.LeastShardAllocationMaxSimultaneousRebalance),
+                    settings.TunningParameters.LeastShardAllocationRebalanceThreshold,
+                    settings.TunningParameters.LeastShardAllocationMaxSimultaneousRebalance),
                 PoisonPill.Instance);
         }
 
@@ -511,14 +468,13 @@ namespace Akka.Cluster.Sharding
         /// Function to determine the shard id for an incoming message, only messages that passed the `extractEntityId` will be used
         /// </param>
         /// <returns>The actor ref of the <see cref="Sharding.ShardRegion"/> that is to be responsible for the shard.</returns>
-        public IActorRef StartProxy(string typeName, string role, IdExtractor idExtractor, ShardResolver shardResolver)
+        public IActorRef StartProxy(
+            string typeName,
+            string role,
+            IdExtractor idExtractor,
+            ShardResolver shardResolver)
         {
-            var timeout = _system.Settings.CreationTimeout;
-            var settings = ClusterShardingSettings.Create(_system).WithRole(role);
-            var startMsg = new ClusterShardingGuardian.StartProxy(typeName, settings, idExtractor, shardResolver);
-            var started = _guardian.Value.Ask<ClusterShardingGuardian.Started>(startMsg, timeout).Result;
-            _regions.TryAdd(typeName, started.ShardRegion);
-            return started.ShardRegion;
+            return StartProxyAsync(typeName, role, idExtractor, shardResolver).Result;
         }
 
         /// <summary>
@@ -541,7 +497,11 @@ namespace Akka.Cluster.Sharding
         /// Function to determine the shard id for an incoming message, only messages that passed the `extractEntityId` will be used
         /// </param>
         /// <returns>The actor ref of the <see cref="Sharding.ShardRegion"/> that is to be responsible for the shard.</returns>
-        public async Task<IActorRef> StartProxyAsync(string typeName, string role, IdExtractor idExtractor, ShardResolver shardResolver)
+        public async Task<IActorRef> StartProxyAsync(
+            string typeName,
+            string role,
+            IdExtractor idExtractor,
+            ShardResolver shardResolver)
         {
             var timeout = _system.Settings.CreationTimeout;
             var settings = ClusterShardingSettings.Create(_system).WithRole(role);
@@ -568,14 +528,7 @@ namespace Akka.Cluster.Sharding
         /// <returns>The actor ref of the <see cref="Sharding.ShardRegion"/> that is to be responsible for the shard.</returns>
         public IActorRef StartProxy(string typeName, string role, IMessageExtractor messageExtractor)
         {
-            IdExtractor extractEntityId = msg =>
-            {
-                var entityId = messageExtractor.EntityId(msg);
-                var entityMessage = messageExtractor.EntityMessage(msg);
-                return Tuple.Create(entityId, entityMessage);
-            };
-
-            return StartProxy(typeName, role, extractEntityId, messageExtractor.ShardId);
+            return StartProxyAsync(typeName, role, messageExtractor).Result;
         }
 
         /// <summary>
@@ -620,15 +573,49 @@ namespace Akka.Cluster.Sharding
             {
                 return region;
             }
-            throw new ArgumentException(string.Format("Shard type [{0}] must be started first", typeName));
+
+            throw new ArgumentException($"Shard type [{typeName}] must be started first");
         }
 
         private void RequireClusterRole(string role)
         {
             if (!(string.IsNullOrEmpty(role) || _cluster.SelfRoles.Contains(role)))
             {
-                throw new IllegalStateException(string.Format("This cluster member [{0}] doesn't have the role [{1}]", _cluster.SelfAddress, role));
+                throw new IllegalStateException(
+                    $"This cluster member [{_cluster.SelfAddress}] doesn't have the role [{role}]");
             }
+        }
+    }
+
+    /// <summary>
+    /// Marker trait for remote messages and persistent events/snapshots with special serializer.
+    /// </summary>
+    public interface IClusterShardingSerializable { }
+
+    /// <summary>
+    /// Convenience implementation of <see cref="IMessageExtractor"/> that 
+    /// construct ShardId based on the <see cref="object.GetHashCode"/> of the EntityId. 
+    /// The number of unique shards is limited by the given MaxNumberOfShards.
+    /// </summary>
+    public abstract class HashCodeMessageExtractor : IMessageExtractor
+    {
+        public readonly int MaxNumberOfShards;
+
+        protected HashCodeMessageExtractor(int maxNumberOfShards)
+        {
+            MaxNumberOfShards = maxNumberOfShards;
+        }
+
+        public abstract string EntityId(object message);
+
+        public virtual object EntityMessage(object message)
+        {
+            return message;
+        }
+
+        public virtual string ShardId(object message)
+        {
+            return (Math.Abs(EntityId(message).GetHashCode()) % MaxNumberOfShards).ToString();
         }
     }
 

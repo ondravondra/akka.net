@@ -15,18 +15,6 @@ namespace Akka.Cluster.Sharding
     [Serializable]
     public class TunningParameters
     {
-        public readonly TimeSpan CoordinatorFailureBackoff;
-        public readonly TimeSpan RetryInterval;
-        public readonly int BufferSize;
-        public readonly TimeSpan HandOffTimeout;
-        public readonly TimeSpan ShardStartTimeout;
-        public readonly TimeSpan ShardFailureBackoff;
-        public readonly TimeSpan EntityRestartBackoff;
-        public readonly TimeSpan RebalanceInterval;
-        public readonly int SnapshotAfter;
-        public readonly int LeastShardAllocationRebalanceThreshold;
-        public readonly int LeastShardAllocationMaxSimultaneousRebalance;
-
         public TunningParameters(
             TimeSpan coordinatorFailureBackoff,
             TimeSpan retryInterval,
@@ -52,41 +40,33 @@ namespace Akka.Cluster.Sharding
             LeastShardAllocationRebalanceThreshold = leastShardAllocationRebalanceThreshold;
             LeastShardAllocationMaxSimultaneousRebalance = leastShardAllocationMaxSimultaneousRebalance;
         }
+
+        public TimeSpan CoordinatorFailureBackoff { get; }
+
+        public TimeSpan RetryInterval { get; }
+
+        public int BufferSize { get; }
+
+        public TimeSpan HandOffTimeout { get; }
+
+        public TimeSpan ShardStartTimeout { get; }
+
+        public TimeSpan ShardFailureBackoff { get; }
+
+        public TimeSpan EntityRestartBackoff { get; }
+
+        public TimeSpan RebalanceInterval { get; }
+
+        public int SnapshotAfter { get; }
+
+        public int LeastShardAllocationRebalanceThreshold { get; }
+
+        public int LeastShardAllocationMaxSimultaneousRebalance { get; }
     }
 
     [Serializable]
     public sealed class ClusterShardingSettings : INoSerializationVerificationNeeded
     {
-        /// <summary>
-        /// Specifies that this entity type requires cluster nodes with a specific role.
-        /// If the role is not specified all nodes in the cluster are used.
-        /// </summary>
-        public readonly string Role;
-
-        /// <summary>
-        /// True if active entity actors shall be automatically restarted upon <see cref="Shard"/> restart.i.e. 
-        /// if the <see cref="Shard"/> is started on a different <see cref="ShardRegion"/> due to rebalance or crash.
-        /// </summary>
-        public readonly bool RememberEntities;
-
-        /// <summary>
-        /// Absolute path to the journal plugin configuration entity that is to be used for the internal 
-        /// persistence of ClusterSharding.If not defined the default journal plugin is used. Note that 
-        /// this is not related to persistence used by the entity actors.
-        /// </summary>
-        public readonly string JournalPluginId;
-
-        /// <summary>
-        /// Absolute path to the snapshot plugin configuration entity that is to be used for the internal persistence 
-        /// of ClusterSharding. If not defined the default snapshot plugin is used.Note that this is not related 
-        /// to persistence used by the entity actors.
-        /// </summary>
-        public readonly string SnapshotPluginId;
-
-        public readonly TunningParameters TunningParameters;
-
-        public readonly ClusterSingletonManagerSettings CoordinatorSingletonSettings;
-
         /// <summary>
         /// Create settings from the default configuration `akka.cluster.sharding`.
         /// </summary>
@@ -142,15 +122,39 @@ namespace Akka.Cluster.Sharding
             CoordinatorSingletonSettings = coordinatorSingletonSettings;
         }
 
+        /// <summary>
+        /// Specifies that this entity type requires cluster nodes with a specific role.
+        /// If the role is not specified all nodes in the cluster are used.
+        /// </summary>
+        public string Role { get; }
+
+        /// <summary>
+        /// True if active entity actors shall be automatically restarted upon <see cref="Shard"/> restart.i.e. 
+        /// if the <see cref="Shard"/> is started on a different <see cref="ShardRegion"/> due to rebalance or crash.
+        /// </summary>
+        public bool RememberEntities { get; }
+
+        /// <summary>
+        /// Absolute path to the journal plugin configuration entity that is to be used for the internal 
+        /// persistence of ClusterSharding.If not defined the default journal plugin is used. Note that 
+        /// this is not related to persistence used by the entity actors.
+        /// </summary>
+        public string JournalPluginId { get; }
+
+        /// <summary>
+        /// Absolute path to the snapshot plugin configuration entity that is to be used for the internal persistence 
+        /// of ClusterSharding. If not defined the default snapshot plugin is used.Note that this is not related 
+        /// to persistence used by the entity actors.
+        /// </summary>
+        public string SnapshotPluginId { get; }
+
+        public TunningParameters TunningParameters { get; }
+
+        public ClusterSingletonManagerSettings CoordinatorSingletonSettings { get; }
+
         public ClusterShardingSettings WithRole(string role)
         {
-            return new ClusterShardingSettings(
-                role: role,
-                rememberEntities: RememberEntities,
-                journalPluginId: JournalPluginId,
-                snapshotPluginId: SnapshotPluginId,
-                tunningParameters: TunningParameters,
-                coordinatorSingletonSettings: CoordinatorSingletonSettings);
+            return Copy(role: role);
         }
 
         public ClusterShardingSettings WithRememberEntities(bool rememberEntities)
@@ -171,7 +175,7 @@ namespace Akka.Cluster.Sharding
         public ClusterShardingSettings WithTuningParameters(TunningParameters tunningParameters)
         {
             if (tunningParameters == null)
-                throw new ArgumentNullException("tunningParameters");
+                throw new ArgumentNullException(nameof(tunningParameters));
 
             return Copy(tunningParameters: tunningParameters);
         }
@@ -179,7 +183,7 @@ namespace Akka.Cluster.Sharding
         public ClusterShardingSettings WithCoordinatorSingletonSettings(ClusterSingletonManagerSettings coordinatorSingletonSettings)
         {
             if (coordinatorSingletonSettings == null)
-                throw new ArgumentNullException("coordinatorSingletonSettings");
+                throw new ArgumentNullException(nameof(coordinatorSingletonSettings));
 
             return Copy(coordinatorSingletonSettings: coordinatorSingletonSettings);
         }
