@@ -12,12 +12,13 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using Akka.Actor;
+using Akka.Cluster.Sharding.Serializers.Proto;
 using Akka.Serialization;
 using Google.ProtocolBuffers;
 
 namespace Akka.Cluster.Sharding.Serialization
 {
-    public class ClusterShardingMessageSerializer : SerializerWithStringManifest
+    internal class ClusterShardingMessageSerializer : SerializerWithStringManifest
     {
         #region manifests
 
