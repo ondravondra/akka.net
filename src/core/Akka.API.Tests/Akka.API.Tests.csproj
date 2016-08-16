@@ -112,6 +112,10 @@
     <Compile Include="App_Packages\ApiApprover.3.0.1\PublicApiGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\contrib\cluster\Akka.Cluster.Sharding\Akka.Cluster.Sharding.csproj">
+      <Project>{a05c31e8-0246-46a1-b3bc-4d6fe7a9aa49}</Project>
+      <Name>Akka.Cluster.Sharding</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\contrib\cluster\Akka.Cluster.Tools\Akka.Cluster.Tools.csproj">
       <Project>{5cf8a8be-b634-473f-bb01-eba878746bd4}</Project>
       <Name>Akka.Cluster.Tools</Name>
