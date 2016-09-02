@@ -1,4 +1,5 @@
-# Akka.NET
+# Akka.NET [![Build status](https://ci.appveyor.com/api/projects/status/lstkbcrlphyb5bwp/branch/coreclr?svg=true)](https://ci.appveyor.com/project/ravengerUA/akka-net/branch/coreclr)
+
 
 ![Akka.NET logo](documentation/icons/AkkaNetLogo.Normal.png)
 
