@@ -8,7 +8,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Configuration;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
@@ -229,12 +228,14 @@ namespace Akka.Persistence.Sql.Common.Journal
             if (config == null) throw new ArgumentNullException(nameof(config), "Sql journal settings cannot be initialized, because required HOCON section couldn't been found");
 
             var connectionString = config.GetString("connection-string");
+#if CONFIGURATION
             if (string.IsNullOrWhiteSpace(connectionString))
             {
-                connectionString = ConfigurationManager
+                connectionString = System.Configuration.ConfigurationManager
                     .ConnectionStrings[config.GetString("connection-string-name", "DefaultConnection")]
                     .ConnectionString;
             }
+#endif
 
             if (string.IsNullOrWhiteSpace(connectionString))
                 throw new ArgumentException("No connection string for Sql Event Journal was specified");
