@@ -1,9 +1,12 @@
 /**
- * Copyright (C) 2009-2015 Lightbend Inc. <http://www.lightbend.com>
+ * Copyright (C) 2009-2017 Typesafe Inc. <http://www.typesafe.com>
+ * Copyright (C) 2013-2017 Akka.NET project <https://github.com/akkadotnet/akka.net>
  */
 
-option java_package = "akka.cluster.protobuf.msg";
+syntax = "proto3";
+package Akka.Cluster.Protobuf.Msg;
 option optimize_for = SPEED;
+
 
 /****************************************
  * Cluster User Messages
@@ -27,7 +30,7 @@ option optimize_for = SPEED;
  * Join
  */
 message Join {
-  required UniqueAddress node = 1;
+  UniqueAddress node = 1;
   repeated string roles = 2;
 }
 
@@ -35,8 +38,8 @@ message Join {
  * Welcome, reply to Join
  */
 message Welcome {
-  required UniqueAddress from = 1;
-  required Gossip gossip = 2;
+  UniqueAddress from = 1;
+  Gossip gossip = 2;
 }
 
 /**
@@ -77,18 +80,18 @@ message Welcome {
  * Gossip Envelope
  */
 message GossipEnvelope {
-  required UniqueAddress from = 1;
-  required UniqueAddress to = 2;
-  required bytes serializedGossip = 3;
+  UniqueAddress from = 1;
+  UniqueAddress to = 2;
+  bytes serializedGossip = 3;
 }
 
 /**
  * Gossip Status
  */
 message GossipStatus {
-  required UniqueAddress from = 1;
+  UniqueAddress from = 1;
   repeated string allHashes = 2;
-  required VectorClock version = 3;
+  VectorClock version = 3;
 }
 
 /**
@@ -99,8 +102,8 @@ message Gossip {
   repeated string allRoles = 2;
   repeated string allHashes = 3;
   repeated Member members = 4;
-  required GossipOverview overview = 5;
-  required VectorClock version = 6;
+  GossipOverview overview = 5;
+  VectorClock version = 6;
 }
 
 /**
@@ -116,15 +119,15 @@ message GossipOverview {
  * Reachability
  */
 message ObserverReachability {
-  required int32 addressIndex = 1;
-  required int64 version = 4;
+  int32 addressIndex = 1;
+  int64 version = 4;
   repeated SubjectReachability subjectReachability = 2;
 }
 
 message SubjectReachability {
-  required int32 addressIndex = 1;
-  required ReachabilityStatus status = 3;
-  required int64 version = 4;
+  int32 addressIndex = 1;
+  ReachabilityStatus status = 3;
+  int64 version = 4;
 }
 
 /**
@@ -141,9 +144,9 @@ enum ReachabilityStatus {
  * Member
  */
 message Member {
-  required int32 addressIndex = 1;
-  required int32 upNumber = 2;
-  required MemberStatus status = 3;
+  int32 addressIndex = 1;
+  int32 upNumber = 2;
+  MemberStatus status = 3;
   repeated int32 rolesIndexes = 4 [packed = true];
 }
 
@@ -164,11 +167,11 @@ enum MemberStatus {
  */
 message VectorClock {
   message Version {
-    required int32 hashIndex = 1;
-    required int64 timestamp = 2;
+    int32 hashIndex = 1;
+    int64 timestamp = 2;
   }
   // the timestamp could be removed but left for test data compatibility
-  optional int64 timestamp = 1;
+  int64 timestamp = 1;
   repeated Version versions = 2;
 }
 
@@ -186,16 +189,16 @@ message VectorClock {
  * Defines a remote address.
  */
 message Address {
-  required string system = 1;
-  required string hostname = 2;
-  required uint32 port = 3;
-  optional string protocol = 4;
+  string system = 1;
+  string hostname = 2;
+  uint32 port = 3;
+  string protocol = 4;
 }
 
 /**
  * Defines a remote address with uid.
  */
 message UniqueAddress {
-  required Address address = 1;
-  required uint32 uid = 2;
+  Address address = 1;
+  uint32 uid = 2;
 }

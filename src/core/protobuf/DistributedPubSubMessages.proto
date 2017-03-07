@@ -1,29 +1,31 @@
 /**
- * Copyright (C) 2009-2015 Lightbend Inc. <http://www.lightbend.com>
+ * Copyright (C) 2009-2017 Typesafe Inc. <http://www.typesafe.com>
+ * Copyright (C) 2013-2017 Akka.NET project <https://github.com/akkadotnet/akka.net>
  */
 
-option java_package = "akka.cluster.pubsub.protobuf.msg";
+syntax = "proto3";
+package Akka.Cluster.PubSub.Protobuf.Msg;
 option optimize_for = SPEED;
 
 message Status {
   message Version {
-    required Address address = 1;
-    required int64 timestamp = 2;
+    Address address = 1;
+    int64 timestamp = 2;
   }
   repeated Version versions = 1;
-  optional bool replyToStatus = 2;
+  bool replyToStatus = 2;
 }
 
 message Delta {
   message Entry {
-    required string key = 1;
-    required int64 version = 2;
-    optional string ref = 3; 
+    string key = 1;
+    int64 version = 2;
+    string ref = 3; 
   }
   message Bucket {
-    required Address owner = 1;
-    required int64 version = 2;
-    repeated Entry content = 3;
+    Address owner = 1;
+    int64 version = 2;
+    Entry content = 3;
   }
   repeated Bucket buckets = 1;
 }
@@ -32,40 +34,47 @@ message Delta {
  * Defines a remote address.
  */
 message Address {
-  required string system = 1;
-  required string hostname = 2;
-  required uint32 port = 3;
-  optional string protocol = 4;
+  string system = 1;
+  string hostname = 2;
+  uint32 port = 3;
+  string protocol = 4;
 }
 
 /**
  * Send normally local, but it is also used by the ClusterClient.
  */
 message Send {
-  required string path = 1;
-  required bool localAffinity = 2;
-  required Payload payload = 3; 
+  string path = 1;
+  bool localAffinity = 2;
+  Payload payload = 3; 
 }
 
 /**
  * SendToAll normally local, but it is also used by the ClusterClient.
  */
 message SendToAll {
-  required string path = 1;
-  required bool allButSelf = 2;
-  required Payload payload = 3; 
+  string path = 1;
+  bool allButSelf = 2;
+  Payload payload = 3; 
 }
 
 /**
  * Publish normally local, but it is also used by the ClusterClient.
  */
 message Publish {
-  required string topic = 1;
-  required Payload payload = 3; 
+  string topic = 1;
+  Payload payload = 3; 
+}
+
+/**
+ * Send a message to only one subscriber of a group.
+ */
+message SendToOneSubscriber {
+  Payload payload = 1;
 }
 
 message Payload {
-  required bytes enclosedMessage = 1;
-  required int32 serializerId = 2;
-  optional bytes messageManifest = 4;
+  bytes enclosedMessage = 1;
+  int32 serializerId = 2;
+  bytes messageManifest = 4;
 }

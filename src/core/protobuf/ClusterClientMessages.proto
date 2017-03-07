@@ -1,8 +1,10 @@
 /**
- * Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
+ * Copyright (C) 2009-2017 Typesafe Inc. <http://www.typesafe.com>
+ * Copyright (C) 2013-2017 Akka.NET project <https://github.com/akkadotnet/akka.net>
  */
 
-option java_package = "akka.cluster.client.protobuf.msg";
+syntax = "proto3";
+package Akka.Cluster.Client.Protobuf.Msg;
 option optimize_for = SPEED;
 
 message Contacts {

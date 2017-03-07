@@ -1,7 +1,10 @@
 /**
- * Copyright (C) 2009-2013 Lightbend Inc. <http://www.lightbend.com>
+ * Copyright (C) 2009-2017 Typesafe Inc. <http://www.typesafe.com>
+ * Copyright (C) 2013-2017 Akka.NET project <https://github.com/akkadotnet/akka.net>
  */
 
+syntax = "proto3";
+package Akka.Remote.Protobuf.Msg;
 option optimize_for = SPEED;
 
 /******************************************
@@ -9,10 +12,11 @@ option optimize_for = SPEED;
 *******************************************/
 
 message SelectionEnvelope {
-  required bytes enclosedMessage = 1;
-  required int32 serializerId = 2;
+  bytes enclosedMessage = 1;
+  int32 serializerId = 2;
   repeated Selection pattern = 3;
-  optional bytes messageManifest = 4;
+  bytes messageManifest = 4;
+  bool wildcardFanOut = 5; // optional for pre 2.3.4 compatibility 
 }
 
 enum PatternType {
@@ -22,6 +26,53 @@ enum PatternType {
 }
 
 message Selection {
-  required PatternType type = 1;
-  optional string matcher = 2;
+  PatternType type = 1;
+  string matcher = 2;
+}
+
+message Identify {
+  Payload messageId = 1;
+}
+
+message ActorIdentity {
+  Payload correlationId = 1;
+  ActorRef ref = 2;
+}
+
+message ActorRef {
+  string path = 1;
+}
+
+message Option {
+  Payload value = 1;
+}
+
+message Payload {
+  bytes enclosedMessage = 1;
+  int32 serializerId = 2;
+  bytes messageManifest = 4;
+}
+
+message WatcherHeartbeatResponse {
+  uint64 uid = 1;
+}
+
+message Throwable {
+  string className = 1;
+  string message = 2;
+  Payload cause = 3;
+  repeated StackTraceElement stackTrace = 4;
+}
+
+message ActorInitializationException {
+  ActorRef actor = 1;
+  string message = 2;
+  Payload cause = 3;
+}
+
+message StackTraceElement {
+  string className = 1;
+  string methodName = 2;
+  string fileName = 3;
+  int32 lineNumber = 4;
 }
