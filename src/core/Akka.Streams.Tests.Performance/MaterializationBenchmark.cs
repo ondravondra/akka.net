@@ -9,7 +9,6 @@ using System;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Streams.Dsl;
-using Akka.Streams.TestKit.Tests;
 using NBench;
 
 namespace Akka.Streams.Tests.Performance
@@ -24,7 +23,7 @@ namespace Akka.Streams.Tests.Performance
         public void Setup(BenchmarkContext context)
         {
             _actorSystem = ActorSystem.Create("MaterializationBenchmark",
-                ConfigurationFactory.FromResource<ScriptedTest>("Akka.Streams.TestKit.Tests.reference.conf"));
+                ConfigurationFactory.FromResource<MaterializationBenchmark>("Akka.Streams.Tests.Performance.reference.conf"));
             _actorSystem.Settings.InjectTopLevelFallback(ActorMaterializer.DefaultConfig());
             _materializerSettings =
                 ActorMaterializerSettings.Create(_actorSystem).WithDispatcher("akka.test.stream-dispatcher");

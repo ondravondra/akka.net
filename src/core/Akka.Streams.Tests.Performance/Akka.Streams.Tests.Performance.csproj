@@ -79,10 +79,6 @@
       <Project>{7dbd5c17-5e9d-40c4-9201-d092751532a7}</Project>
       <Name>Akka.TestKit.Xunit2</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Akka.Streams.TestKit.Tests\Akka.Streams.TestKit.Tests.csproj">
-      <Project>{46EA9956-913F-4E65-9902-28A5EDD9CDB3}</Project>
-      <Name>Akka.Streams.TestKit.Tests</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Akka.Streams.TestKit\Akka.Streams.TestKit.csproj">
       <Project>{ac70bf13-890b-4a06-a269-d0b301f463df}</Project>
       <Name>Akka.Streams.TestKit</Name>
@@ -113,6 +109,7 @@
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="reference.conf" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
