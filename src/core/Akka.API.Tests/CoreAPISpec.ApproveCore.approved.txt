@@ -4415,6 +4415,30 @@ namespace Akka.Serialization
         public override object FromBinary(byte[] bytes, System.Type type) { }
         public override byte[] ToBinary(object obj) { }
     }
+    public class HyperionSerializer : Akka.Serialization.Serializer
+    {
+        public readonly Akka.Serialization.HyperionSerializerSettings Settings;
+        public HyperionSerializer(Akka.Actor.ExtendedActorSystem system) { }
+        public HyperionSerializer(Akka.Actor.ExtendedActorSystem system, Akka.Configuration.Config config) { }
+        public HyperionSerializer(Akka.Actor.ExtendedActorSystem system, Akka.Serialization.HyperionSerializerSettings settings) { }
+        public override int Identifier { get; }
+        public override bool IncludeManifest { get; }
+        public override object FromBinary(byte[] bytes, System.Type type) { }
+        public override byte[] ToBinary(object obj) { }
+    }
+    public sealed class HyperionSerializerSettings
+    {
+        public static readonly Akka.Serialization.HyperionSerializerSettings Default;
+        public readonly System.Type KnownTypesProvider;
+        public readonly bool PreserveObjectReferences;
+        public readonly bool VersionTolerance;
+        public HyperionSerializerSettings(bool preserveObjectReferences, bool versionTolerance, System.Type knownTypesProvider) { }
+        public static Akka.Serialization.HyperionSerializerSettings Create(Akka.Configuration.Config config) { }
+    }
+    public interface IKnownTypesProvider
+    {
+        System.Collections.Generic.IEnumerable<System.Type> GetKnownTypes();
+    }
     public class Information
     {
         public Information() { }

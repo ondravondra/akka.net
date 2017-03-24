@@ -81,7 +81,7 @@ namespace Akka.Persistence.TestKit.Journal
         /// When true enables tests which check if the Journal properly rejects
         /// writes of objects which are not serializable.
         /// </summary>
-        protected virtual bool SupportsRejectingNonSerializableObjects { get { return true; } }
+        protected virtual bool SupportsRejectingNonSerializableObjects { get { return false; } }
 
         protected IActorRef Journal { get { return Extension.JournalFor(null); } }
 

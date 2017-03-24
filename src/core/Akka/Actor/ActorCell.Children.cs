@@ -408,7 +408,7 @@ namespace Akka.Actor
                     {
                         if (argument != null && !(argument is INoSerializationVerificationNeeded))
                         {
-                            var objectType = argument.GetType();
+                            var objectType = argument.AsInstanceOf<object>();
                             var serializer = ser.FindSerializerFor(objectType);
                             var bytes = serializer.ToBinary(objectType);
                             var manifestSerializer = serializer as SerializerWithStringManifest;

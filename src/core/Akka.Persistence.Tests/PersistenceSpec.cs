@@ -31,7 +31,7 @@ namespace Akka.Persistence.Tests
                 akka.persistence.snapshot-store.local.dir = ""target/snapshots-{1}/""
                 akka.test.single-expect-default = 10s", serialization ?? "on", test);
 
-            return c.WithFallback(ConfigurationFactory.ParseString(configString));
+            return c.WithFallback(ConfigurationFactory.ParseString(configString)).WithFallback(Persistence.DefaultConfig());
         }
 
         internal readonly Cleanup Clean;
