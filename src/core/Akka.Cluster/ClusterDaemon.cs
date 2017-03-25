@@ -38,12 +38,10 @@ namespace Akka.Cluster
         /// </summary>
         internal abstract class BaseClusterUserAction
         {
-            readonly Address _address;
-
             /// <summary>
             /// TBD
             /// </summary>
-            public Address Address { get { return _address; } }
+            public Address Address { get; }
 
             /// <summary>
             /// TBD
@@ -51,18 +49,7 @@ namespace Akka.Cluster
             /// <param name="address">TBD</param>
             protected BaseClusterUserAction(Address address)
             {
-                _address = address;
-            }
-
-            /// <summary>
-            /// TBD
-            /// </summary>
-            /// <param name="obj">TBD</param>
-            /// <returns>TBD</returns>
-            public override bool Equals(object obj)
-            {
-                var baseUserAction = (BaseClusterUserAction)obj;
-                return baseUserAction != null && Equals(baseUserAction);
+                Address = address;
             }
 
             /// <summary>
@@ -72,7 +59,20 @@ namespace Akka.Cluster
             /// <returns>TBD</returns>
             protected bool Equals(BaseClusterUserAction other)
             {
-                return Equals(_address, other._address);
+                return Equals(Address, other.Address);
+            }
+
+            /// <summary>
+            /// TBD
+            /// </summary>
+            /// <param name="obj">TBD</param>
+            /// <returns>TBD</returns>
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((BaseClusterUserAction)obj);
             }
 
             /// <summary>
@@ -81,7 +81,7 @@ namespace Akka.Cluster
             /// <returns>TBD</returns>
             public override int GetHashCode()
             {
-                return (_address != null ? _address.GetHashCode() : 0);
+                return (Address != null ? Address.GetHashCode() : 0);
             }
         }
 

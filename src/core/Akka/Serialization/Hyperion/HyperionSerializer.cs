@@ -89,34 +89,6 @@ namespace Akka.Serialization
         /// <returns>A byte array containing the serialized object </returns>
         public override byte[] ToBinary(object obj)
         {
-            System.Diagnostics.Debug.WriteLine($"SERIALIZER {obj.GetType()}: {obj.ToString()}");
-
-            if (obj.GetType().TypeQualifiedName().Contains("Akka.Persistence.UnconfirmedWarning"))
-            {
-                byte[] serialized;
-                using (var ms = new MemoryStream())
-                {
-                    try
-                    {
-                        _serializer.Serialize(obj, ms);
-                        serialized = ms.ToArray();
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                        throw;
-                    }
-                    
-                }
-
-                using (var ms = new MemoryStream(serialized))
-                {
-                    var deserialized = _serializer.Deserialize<object>(ms);
-                    System.Diagnostics.Debug.WriteLine($"DERIALIZER {deserialized.GetType()}: {deserialized.ToString()}");
-                }
-
-
-            }
             using (var ms = new MemoryStream())
             {
                 _serializer.Serialize(obj, ms);
