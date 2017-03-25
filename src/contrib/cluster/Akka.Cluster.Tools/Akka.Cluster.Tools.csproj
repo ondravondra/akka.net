@@ -61,8 +61,6 @@
     <Compile Include="Client\ClusterClientSettings.cs" />
     <Compile Include="Client\ClusterReceptionist.cs" />
     <Compile Include="Client\ClusterReceptionistSettings.cs" />
-    <Compile Include="Client\Serialization\ClusterClientMessageSerializer.cs" />
-    <Compile Include="Client\Serialization\Proto\ClusterClientMessages.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublishSubscribe\DistributedPubSub.cs" />
     <Compile Include="PublishSubscribe\DistributedPubSubMediator.cs" />
@@ -70,15 +68,12 @@
     <Compile Include="PublishSubscribe\Internal\TopicMessages.cs" />
     <Compile Include="PublishSubscribe\Internal\Topics.cs" />
     <Compile Include="PublishSubscribe\PerGroupingBuffer.cs" />
-    <Compile Include="PublishSubscribe\Serialization\DistributedPubSubMessageSerializer.cs" />
-    <Compile Include="PublishSubscribe\Serialization\Proto\DistributedPubSubMessages.cs" />
     <Compile Include="Singleton\ClusterSingletonManager.cs" />
     <Compile Include="Singleton\ClusterSingletonManagerSettings.cs" />
     <Compile Include="Singleton\ClusterSingletonProxy.cs" />
     <Compile Include="Singleton\ClusterSingletonProxySettings.cs" />
     <Compile Include="Singleton\MemberAgeOrdering.cs" />
     <Compile Include="Singleton\OldestChangedBuffer.cs" />
-    <Compile Include="Singleton\Serialization\ClusterSingletonMessageSerializer.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Client\reference.conf" />
