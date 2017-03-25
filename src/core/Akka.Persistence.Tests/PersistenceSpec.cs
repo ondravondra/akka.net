@@ -29,7 +29,7 @@ namespace Akka.Persistence.Tests
                 akka.actor.serialize-messages = {0}
                 akka.persistence.publish-plugin-commands = on
                 akka.persistence.snapshot-store.local.dir = ""target/snapshots-{1}/""
-                akka.test.single-expect-default = 10s", serialization ?? "on", test);
+                akka.test.single-expect-default = 10s", "off", test);
 
             return c.WithFallback(ConfigurationFactory.ParseString(configString)).WithFallback(Persistence.DefaultConfig());
         }
