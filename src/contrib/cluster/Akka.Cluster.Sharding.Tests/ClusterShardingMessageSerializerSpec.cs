@@ -5,129 +5,111 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using Akka.Actor;
-using Akka.Cluster.Sharding.Serialization;
-using Akka.Cluster.Tools.Singleton;
-using Akka.Configuration;
-using Akka.Serialization;
 using Akka.TestKit;
-using Akka.Util.Internal;
 using Xunit;
-using FluentAssertions;
 
 namespace Akka.Cluster.Sharding.Tests
 {
     public class ClusterShardingMessageSerializerSpec : AkkaSpec
     {
-        private SerializerWithStringManifest serializer;
-        private IActorRef region1;
-        private IActorRef region2;
-        private IActorRef region3;
-        private IActorRef regionProxy1;
-        private IActorRef regionProxy2;
-
-        private static readonly Config SpecConfig;
-
-        static ClusterShardingMessageSerializerSpec()
-        {
-            SpecConfig = ClusterSingletonManager.DefaultConfig().WithFallback(ClusterSharding.DefaultConfig());
-        }
-
-        public ClusterShardingMessageSerializerSpec() : base(SpecConfig)
-        {
-            serializer = new ClusterShardingMessageSerializer((ExtendedActorSystem)Sys);
-            region1 = Sys.ActorOf(Props.Empty, "region1");
-            region2 = Sys.ActorOf(Props.Empty, "region2");
-            region3 = Sys.ActorOf(Props.Empty, "region3");
-            regionProxy1 = Sys.ActorOf(Props.Empty, "regionProxy1");
-            regionProxy2 = Sys.ActorOf(Props.Empty, "regionProxy2");
-        }
-
-        private void CheckSerialization(object obj)
-        {
-            var blob = serializer.ToBinary(obj);
-            var reference = serializer.FromBinary(blob, serializer.Manifest(obj));
-            reference.Should().Be(obj);
-        }
-
         [Fact]
-        public void ClusterShardingMessageSerializer_must_be_able_to_serializable_ShardCoordinator_snapshot_State()
+        public void Can_serialize_CoordinatorState()
         {
-            var shards = ImmutableDictionary
-                .CreateBuilder<string, IActorRef>()
-                .AddAndReturn("a", region1)
-                .AddAndReturn("b", region2)
-                .AddAndReturn("c", region3)
-                .ToImmutableDictionary();
+            var region1 = Sys.ActorOf(Props.Empty, "region1");
+            var region2 = Sys.ActorOf(Props.Empty, "region2");
+            var region3 = Sys.ActorOf(Props.Empty, "region3");
+            var regionProxy1 = Sys.ActorOf(Props.Empty, "regionProxy1");
+            var regionProxy2 = Sys.ActorOf(Props.Empty, "regionProxy2");
 
-            var regions = ImmutableDictionary
-                .CreateBuilder<IActorRef, IImmutableList<string>>()
-                .AddAndReturn(region1, ImmutableArray.Create("a"))
-                .AddAndReturn(region2, ImmutableArray.Create("b", "c"))
-                .AddAndReturn(region3, ImmutableArray<string>.Empty)
-                .ToImmutableDictionary();
+            var shards = new Dictionary<string, IActorRef>
+            {
+                ["a"] = region1,
+                ["b"] = region2,
+                ["c"] = region3
+            }.ToImmutableDictionary();
 
-            var state = new PersistentShardCoordinator.State(
+            var regions = new Dictionary<IActorRef, IImmutableList<string>>
+            {
+                [region1] = ImmutableArray.Create("a"),
+                [region2] = ImmutableArray.Create("b", "c"),
+                [region3] = ImmutableArray<string>.Empty
+            }.ToImmutableDictionary();
+
+            var message = new PersistentShardCoordinator.State(
                 shards,
                 regions,
                 ImmutableHashSet.Create(regionProxy1, regionProxy2),
                 ImmutableHashSet.Create("d"));
 
-            CheckSerialization(state);
+            AssertEqual(message);
         }
 
         [Fact]
-        public void ClusterShardingMessageSerializer_must_be_able_to_serializable_ShardCoordinator_domain_events()
+        public void Can_serialize_ShardIdMessage()
         {
-            CheckSerialization(new PersistentShardCoordinator.ShardRegionRegistered(region1));
-            CheckSerialization(new PersistentShardCoordinator.ShardRegionProxyRegistered(regionProxy1));
-            CheckSerialization(new PersistentShardCoordinator.ShardRegionTerminated(region1));
-            CheckSerialization(new PersistentShardCoordinator.ShardRegionProxyTerminated(regionProxy1));
-            CheckSerialization(new PersistentShardCoordinator.ShardHomeAllocated("a", region1));
-            CheckSerialization(new PersistentShardCoordinator.ShardHomeDeallocated("a"));
+
         }
 
         [Fact]
-        public void ClusterShardingMessageSerializer_must_be_able_to_serializable_ShardCoordinator_remote_messages()
+        public void Can_serialize_ShardHomeAllocated()
         {
-            CheckSerialization(new PersistentShardCoordinator.Register(region1));
-            CheckSerialization(new PersistentShardCoordinator.RegisterProxy(regionProxy1));
-            CheckSerialization(new PersistentShardCoordinator.RegisterAck(region1));
-            CheckSerialization(new PersistentShardCoordinator.GetShardHome("a"));
-            CheckSerialization(new PersistentShardCoordinator.ShardHome("a", region1));
-            CheckSerialization(new PersistentShardCoordinator.HostShard("a"));
-            CheckSerialization(new PersistentShardCoordinator.ShardStarted("a"));
-            CheckSerialization(new PersistentShardCoordinator.BeginHandOff("a"));
-            CheckSerialization(new PersistentShardCoordinator.BeginHandOffAck("a"));
-            CheckSerialization(new PersistentShardCoordinator.HandOff("a"));
-            CheckSerialization(new PersistentShardCoordinator.ShardStopped("a"));
-            CheckSerialization(new PersistentShardCoordinator.GracefulShutdownRequest(region1));
+            var shard = Sys.ActorOf(Props.Empty, "region1");
+            var message = new PersistentShardCoordinator.ShardHomeAllocated("b", shard);
+            AssertEqual(message);
         }
 
         [Fact]
-        public void ClusterShardingMessageSerializer_must_be_able_to_serializable_PersistentShard_snapshot_state()
+        public void Can_serialize_ShardHome()
         {
-            CheckSerialization(new Shard.ShardState(ImmutableHashSet.Create("e1", "e2", "e3")));
+            var shard = Sys.ActorOf(Props.Empty, "region1");
+            var message = new PersistentShardCoordinator.ShardHome("a", shard);
+            AssertEqual(message);
         }
 
         [Fact]
-        public void ClusterShardingMessageSerializer_must_be_able_to_serializable_PersistentShard_domain_events()
+        public void Can_serialize_EntityState()
         {
-            CheckSerialization(new Shard.EntityStarted("e1"));
-            CheckSerialization(new Shard.EntityStopped("e1"));
+            var entries = ImmutableHashSet.Create("e1", "e2", "e3");
+            var message = new Shard.ShardState(entries);
+            AssertEqual(message);
         }
 
         [Fact]
-        public void ClusterShardingMessageSerializer_must_be_able_to_serializable_GetShardStats()
+        public void Can_serialize_EntityStarted()
         {
-            CheckSerialization(Shard.GetShardStats.Instance);
+            var message = new Shard.EntityStarted("e1");
+            AssertEqual(message);
         }
 
         [Fact]
-        public void ClusterShardingMessageSerializer_must_be_able_to_serializable_ShardStats()
+        public void Can_serialize_EntityStopped()
         {
-            CheckSerialization(new Shard.ShardStats("a", 23));
+            var message = new Shard.EntityStopped("e1");
+            AssertEqual(message);
+        }
+
+        [Fact]
+        public void Can_serialize_ShardStats()
+        {
+            var message = new Shard.ShardStats("a", 23);
+            AssertEqual(message);
+        }
+
+        private T AssertAndReturn<T>(T message)
+        {
+            var serializer = Sys.Serialization.FindSerializerFor(message);
+            var serialized = serializer.ToBinary(message);
+            var result = serializer.FromBinary(serialized, typeof(T));
+            return (T)result;
+        }
+
+        private void AssertEqual<T>(T message)
+        {
+            var deserialized = AssertAndReturn(message);
+            Assert.Equal(message, deserialized);
         }
     }
 }

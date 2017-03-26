@@ -105,7 +105,7 @@ namespace Akka.Cluster.Tests.MultiNode
     {
         private readonly SurviveNetworkInstabilitySpecConfig _config;
 
-        protected SurviveNetworkInstabilitySpec()
+        public SurviveNetworkInstabilitySpec()
             : this(new SurviveNetworkInstabilitySpecConfig())
         {
         }

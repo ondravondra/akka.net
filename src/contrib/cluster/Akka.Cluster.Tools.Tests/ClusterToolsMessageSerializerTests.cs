@@ -21,12 +21,6 @@ namespace Akka.Cluster.Tools.Tests
 {
     public class ClusterToolsMessageSerializerTests : AkkaSpec
     {
-        public ClusterToolsMessageSerializerTests()
-            : base(DistributedPubSub.DefaultConfig())
-        {
-
-        }
-
         //
         // DistributedPubSub messages
         //
@@ -158,6 +152,7 @@ namespace Akka.Cluster.Tools.Tests
         // ClusterSingleton messages
         //
 
+        // TODO: who sends this message?
         [Fact]
         public void Can_serialize_ClusterReceptionist_HandOverToMe()
         {
@@ -165,6 +160,7 @@ namespace Akka.Cluster.Tools.Tests
             AssertAndReturn(message).Should().BeOfType<HandOverToMe>();
         }
 
+        // TODO: who sends this message?
         [Fact]
         public void Can_serialize_ClusterReceptionist_HandOverInProgress()
         {
@@ -172,6 +168,7 @@ namespace Akka.Cluster.Tools.Tests
             AssertAndReturn(message).Should().BeOfType<HandOverInProgress>();
         }
 
+        // TODO: who sends this message?
         [Fact]
         public void Can_serialize_ClusterReceptionist_HandOverDone()
         {
@@ -179,6 +176,7 @@ namespace Akka.Cluster.Tools.Tests
             AssertAndReturn(message).Should().BeOfType<HandOverDone>();
         }
 
+        // TODO: who sends this message?
         [Fact]
         public void Can_serialize_ClusterReceptionist_TakeOverFromMe()
         {
