@@ -84,10 +84,6 @@
       <Project>{caa97041-cfc0-4081-9bd2-8b139e62a611}</Project>
       <Name>Akka.Serialization.TestKit</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Akka.Serialization.Wire\Akka.Serialization.Wire.csproj">
-      <Project>{b47ca568-40cf-48de-b87e-31bd400ebb08}</Project>
-      <Name>Akka.Serialization.Wire</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">
