@@ -3,29 +3,10 @@
   <PropertyGroup>
     <AssemblyTitle>Akka.MultiNodeTestRunner.Shared</AssemblyTitle>
     <TargetFrameworks>net452</TargetFrameworks>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Akka\Akka.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="**\*.cs" Exclude="Persistence\VisualizerRuntimeTemplate.cs" />
-    <Compile Include="Persistence\VisualizerRuntimeTemplate.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>VisualizerRuntimeTemplate.tt</DependentUpon>
-    </Compile>
-    <Content Include="Persistence\VisualizerRuntimeTemplate.tt">
-      <Generator>TextTemplatingFilePreprocessor</Generator>
-      <LastGenOutput>VisualizerRuntimeTemplate.cs</LastGenOutput>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net452' ">
-    <Reference Include="System" />
-    <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net452' ">

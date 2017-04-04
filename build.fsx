@@ -18,6 +18,7 @@ let outputTests = output @@ "TestResults"
 let outputPerfTests = output @@ "perf"
 let outputBinaries = output @@ "binaries"
 let outputNuGet = output @@ "nuget"
+let outputMultiNode = output @@ "multinode"
 let outputBinariesNet45 = outputBinaries @@ "net45"
 let outputBinariesNetStandard = outputBinaries @@ "netstandard1.6"
 
@@ -27,6 +28,7 @@ Target "Clean" (fun _ ->
     CleanDir outputPerfTests
     CleanDir outputBinaries
     CleanDir outputNuGet
+    CleanDir outputMultiNode
     CleanDir outputBinariesNet45
     CleanDir outputBinariesNetStandard
 
@@ -58,12 +60,15 @@ Target "Build" (fun _ ->
     projects |> Seq.iter (runSingleProject)
 )
 
+//--------------------------------------------------------------------------------
+// Tests targets 
+//--------------------------------------------------------------------------------
+
 Target "RunTests" (fun _ ->
     let projects = !! "./**/core/**/*.Tests.csproj"
                    ++ "./**/contrib/**/*.Tests.csproj"
                    -- "./**/Akka.Remote.Tests.csproj"
                    -- "./**/Akka.Streams.Tests.csproj"
-                   -- "./**/Akka.Persistence.TestKit.Tests.csproj"
                    -- "./**/Akka.Persistence.Sqlite.Tests.csproj"
                    -- "./**/serializers/**/*Wire*.csproj"
 
@@ -78,6 +83,33 @@ Target "RunTests" (fun _ ->
     projects |> Seq.iter (runSingleProject)
 )
 
+Target "MultiNodeTests" (fun _ ->
+    let multiNodeTestPath = findToolInSubPath "Akka.MultiNodeTestRunner.exe" (currentDirectory @@ "src" @@ "core" @@ "Akka.MultiNodeTestRunner" @@ "bin" @@ "Release" @@ "net452")
+    let multiNodeTestAssemblies = !! "src/**/bin/Release/**/Akka.Remote.Tests.MultiNode.dll" ++
+                                     "src/**/bin/Release/**/Akka.Cluster.Tests.MultiNode.dll" ++
+                                     "src/**/bin/Release/**/Akka.Cluster.Tools.Tests.MultiNode.dll" ++
+                                     "src/**/bin/Release/**/Akka.Cluster.Sharding.Tests.MultiNode.dll"
+
+    printfn "Using MultiNodeTestRunner: %s" multiNodeTestPath
+
+    let runMultiNodeSpec assembly =
+        let spec = getBuildParam "spec"
+
+        let args = new StringBuilder()
+                |> append assembly
+                |> append "-Dmultinode.enable-filesink=on"
+                |> append (sprintf "-Dmultinode.output-directory=\"%s\"" outputMultiNode)
+                |> appendIfNotNullOrEmpty spec "-Dmultinode.spec="
+                |> toText
+
+        let result = ExecProcess(fun info -> 
+            info.FileName <- multiNodeTestPath
+            info.WorkingDirectory <- (Path.GetDirectoryName (FullName multiNodeTestPath))
+            info.Arguments <- args) (System.TimeSpan.FromMinutes 60.0) (* This is a VERY long running task. *)
+        if result <> 0 then failwithf "MultiNodeTestRunner failed. %s %s" multiNodeTestPath args
+    
+    multiNodeTestAssemblies |> Seq.iter (runMultiNodeSpec)
+)
 //--------------------------------------------------------------------------------
 // Nuget targets 
 //--------------------------------------------------------------------------------
@@ -192,7 +224,6 @@ Target "HelpNuget" <| fun _ ->
 Target "BuildRelease" DoNothing
 Target "All" DoNothing
 Target "Nuget" DoNothing
-Target "MultiNodeTests" DoNothing
 Target "NBench" DoNothing
 
 // build dependencies
@@ -200,6 +231,7 @@ Target "NBench" DoNothing
 
 // tests dependencies
 "Clean" ==> "RestorePackages" ==> "Build" ==> "RunTests"
+"Build" ==> "MultiNodeTests"
 
 // nuget dependencies
 "Clean" ==> "RestorePackages" ==> "Build" ==> "CreateNuget"

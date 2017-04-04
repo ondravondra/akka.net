@@ -219,7 +219,7 @@ namespace Akka.Streams.Tests.Dsl
                 .RunWith(Sink.Ignore<int>(), Materializer);
 
             task.Wait(TimeSpan.FromSeconds(2)).ShouldBeFalse();
-            task.Wait(TimeSpan.FromSeconds(1)).ShouldBeTrue();
+            task.Wait(TimeSpan.FromSeconds(3)).ShouldBeTrue();
 
             // With a buffer large enough to hold all arriving elements, delays don't add up 
             task = Source.From(Enumerable.Range(1, 100))
@@ -227,7 +227,7 @@ namespace Akka.Streams.Tests.Dsl
                 .WithAttributes(Attributes.CreateInputBuffer(100, 100))
                 .RunWith(Sink.Ignore<int>(), Materializer);
 
-            task.Wait(TimeSpan.FromSeconds(2)).ShouldBeTrue();
+            task.Wait(TimeSpan.FromSeconds(3)).ShouldBeTrue();
 
             // Delays that are already present are preserved when buffer is large enough 
             task = Source.Tick(TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(100), NotUsed.Instance)
@@ -237,7 +237,7 @@ namespace Akka.Streams.Tests.Dsl
                 .RunWith(Sink.Ignore<NotUsed>(), Materializer);
 
             task.Wait(TimeSpan.FromMilliseconds(900)).ShouldBeFalse();
-            task.Wait(TimeSpan.FromSeconds(1)).ShouldBeTrue();
+            task.Wait(TimeSpan.FromSeconds(3)).ShouldBeTrue();
         }
 
         [Fact]
