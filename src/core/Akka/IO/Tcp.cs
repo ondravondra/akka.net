@@ -1003,6 +1003,7 @@ namespace Akka.IO
     /// TBD
     /// </summary>
     public class TcpExt : IOExtension
+        , INoSerializationVerificationNeeded // TODO: it should work without the interface
     {
         private readonly TcpSettings _settings;
         private readonly IActorRef _manager;

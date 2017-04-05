@@ -76,7 +76,8 @@ namespace Akka.IO
     /// <summary>
     /// TBD
     /// </summary>
-    internal interface IChannelRegistry
+    internal interface IChannelRegistry 
+        : INoSerializationVerificationNeeded // TODO: it should work without the interface
     {
         /// <summary>
         /// TBD
@@ -90,7 +91,7 @@ namespace Akka.IO
     /// <summary>
     /// TBD
     /// </summary>
-    internal class ChannelRegistration
+    internal class ChannelRegistration : INoSerializationVerificationNeeded
     {
         /// <summary>
         /// TBD
