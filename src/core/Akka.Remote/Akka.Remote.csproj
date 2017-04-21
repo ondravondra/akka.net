@@ -144,6 +144,7 @@
     <Compile Include="Routing\RemoteRouterConfig.cs" />
     <Compile Include="Serialization\DaemonMsgCreateSerializer.cs" />
     <Compile Include="Serialization\MessageContainerSerializer.cs" />
+    <Compile Include="Serialization\SystemMessageSerializer.cs" />
     <Compile Include="Serialization\PrimitiveSerializers.cs" />
     <Compile Include="Serialization\MiscMessageSerializer.cs" />
     <Compile Include="Serialization\ProtobufSerializer.cs" />
