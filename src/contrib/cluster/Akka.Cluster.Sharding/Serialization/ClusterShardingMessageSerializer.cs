@@ -14,6 +14,7 @@ using System.Linq;
 using Akka.Actor;
 using Akka.Serialization;
 using Google.Protobuf;
+using ActorRefMessage = Akka.Remote.Serialization.Proto.Msg.ActorRefData;
 
 namespace Akka.Cluster.Sharding.Serialization
 {
@@ -333,16 +334,16 @@ namespace Akka.Cluster.Sharding.Serialization
         //
         // ActorRefMessage
         //
-        private Proto.Msg.ActorRefMessage ActorRefMessageToProto(IActorRef actorRef)
+        private ActorRefMessage ActorRefMessageToProto(IActorRef actorRef)
         {
-            var message = new Proto.Msg.ActorRefMessage();
-            message.Ref = Akka.Serialization.Serialization.SerializedActorPath(actorRef);
+            var message = new ActorRefMessage();
+            message.Path = Akka.Serialization.Serialization.SerializedActorPath(actorRef);
             return message;
         }
 
         private IActorRef ActorRefMessageFromBinary(byte[] binary)
         {
-            return ResolveActorRef(Proto.Msg.ActorRefMessage.Parser.ParseFrom(binary).Ref);
+            return ResolveActorRef(ActorRefMessage.Parser.ParseFrom(binary).Path);
         }
 
         //

@@ -8,7 +8,7 @@
 using System;
 using System.Linq;
 using Akka.Actor;
-using Akka.Remote.Proto;
+using Akka.Remote.Serialization.Proto.Msg;
 using Akka.Serialization;
 using Google.Protobuf;
 
