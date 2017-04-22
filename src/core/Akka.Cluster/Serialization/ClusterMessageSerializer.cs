@@ -45,8 +45,6 @@ namespace Akka.Cluster.Serialization
             };
         }
 
-        public override int Identifier { get; } = 23;
-
         public override bool IncludeManifest => true;
 
         public override byte[] ToBinary(object obj)

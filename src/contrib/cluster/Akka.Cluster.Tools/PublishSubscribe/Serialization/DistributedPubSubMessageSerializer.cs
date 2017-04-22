@@ -19,11 +19,8 @@ using AddressData = Akka.Remote.Serialization.Proto.Msg.AddressData;
 
 namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
 {
-    /**
-     * Protobuf serializer of DistributedPubSubMediator messages.
-     */
     /// <summary>
-    /// TBD
+    /// Protobuf serializer of DistributedPubSubMediator messages.
     /// </summary>
     public class DistributedPubSubMessageSerializer : SerializerWithStringManifest
     {
@@ -44,7 +41,6 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         /// <param name="system">The actor system to associate with this serializer.</param>
         public DistributedPubSubMessageSerializer(ExtendedActorSystem system) : base(system)
         {
-            Identifier = SerializerIdentifierHelper.GetSerializerIdentifierFromConfig(this.GetType(), system);
             _payloadSupport = new WrappedPayloadSupport(system);
             _fromBinaryMap = new Dictionary<string, Func<byte[], object>>
             {
@@ -56,12 +52,6 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                 {SendToOneSubscriberManifest, SendToOneSubscriberFrom}
             };
         }
-
-        /// <summary>
-        /// Completely unique value to identify this implementation of Serializer, used to optimize network traffic
-        /// Values from 0 to 16 is reserved for Akka internal usage
-        /// </summary>
-        public override int Identifier { get; }
 
         /// <summary>
         /// Serializes the given object into a byte array

@@ -42,7 +42,7 @@ namespace Akka.Remote.Serialization
         private const string TailChoppingPoolManifest = "ROTCP";
         private const string RemoteRouterConfigManifest = "RORRC";
 
-        private static readonly byte[] EmptyBytes = new byte[0];
+        private static readonly byte[] EmptyBytes = {};
 
         private readonly WrappedPayloadSupport _payloadSupport;
 

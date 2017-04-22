@@ -20,7 +20,7 @@ namespace Akka.Remote.Serialization
     {
         private readonly WrappedPayloadSupport _payloadSupport;
 
-        private static readonly byte[] EmptyBytes = new byte[0];
+        private static readonly byte[] EmptyBytes = {};
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SystemMessageSerializer" /> class.
