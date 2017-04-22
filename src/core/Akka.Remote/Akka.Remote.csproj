@@ -154,6 +154,7 @@
     <Compile Include="Serialization\Proto\ContainerFormats.g.cs" />
     <Compile Include="Serialization\Proto\SystemMessageFormats.g.cs" />
     <Compile Include="Serialization\Proto\WireFormats.g.cs" />
+    <Compile Include="Serialization\ExceptionSupport.cs" />
     <Compile Include="Serialization\WrappedPayloadSupport.cs" />
     <Compile Include="Transport\AkkaPduCodec.cs" />
     <Compile Include="Transport\DotNetty\AkkaLoggingHandler.cs" />

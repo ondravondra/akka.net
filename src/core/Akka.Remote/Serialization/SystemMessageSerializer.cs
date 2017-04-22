@@ -19,6 +19,7 @@ namespace Akka.Remote.Serialization
     public sealed class SystemMessageSerializer : Serializer
     {
         private readonly WrappedPayloadSupport _payloadSupport;
+        private readonly ExceptionSupport _extensionSupport;
 
         private static readonly byte[] EmptyBytes = {};
 
@@ -29,10 +30,11 @@ namespace Akka.Remote.Serialization
         public SystemMessageSerializer(ExtendedActorSystem system) : base(system)
         {
             _payloadSupport = new WrappedPayloadSupport(system);
+            _extensionSupport = new ExceptionSupport(system);
         }
 
         /// <inheritdoc />
-        public override bool IncludeManifest { get; } = false;
+        public override bool IncludeManifest { get; } = true; // TODO: should be false
 
         /// <inheritdoc />
         public override byte[] ToBinary(object obj)

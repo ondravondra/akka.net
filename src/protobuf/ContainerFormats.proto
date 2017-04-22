@@ -67,21 +67,9 @@ message RemoteWatcherHeartbeatResponse {
 *******************************************/
 
 message ExceptionData {
-  string className = 1;
-  string message = 2;
-  Payload cause = 3;
-  repeated StackTraceElement stackTrace = 4;
-}
-
-message ActorInitializationException {
-  ActorRefData actor = 1;
-  string message = 2;
-  Payload cause = 3;
-}
-
-message StackTraceElement {
-  string className = 1;
-  string methodName = 2;
-  string fileName = 3;
-  int32 lineNumber = 4;
+	string source = 1;
+	string message = 2;
+	string stackTrace = 3;
+	ExceptionData cause = 4;
+	string className = 5;
 }

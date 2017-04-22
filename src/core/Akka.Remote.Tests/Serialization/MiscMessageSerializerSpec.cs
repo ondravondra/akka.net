@@ -26,6 +26,40 @@ namespace Akka.Remote.Tests.Serialization
 {
     public class MiscMessageSerializerSpec : AkkaSpec
     {
+        #region
+        class TestExceptionNoDefaultConstuctor : Exception
+        {
+            public TestExceptionNoDefaultConstuctor(string message) : base(message)
+            {
+            }
+        }
+
+        internal class TestException : Exception
+        {
+            public TestException() { }
+            public TestException(string message) : base(message) { }
+            public TestException(string message, Exception innerException) : base(message, innerException) {}
+
+            public override string StackTrace { get; } = "stack trace";
+
+            private bool Equals(TestException other)
+            {
+                return Equals(Message, other.Message) && Equals(StackTrace, other.StackTrace) && Equals(InnerException, other.InnerException);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+
+                return Equals((TestException)obj);
+            }
+
+            public override int GetHashCode() => 1;
+        }
+        #endregion
+
         public MiscMessageSerializerSpec() : base(ConfigurationFactory.ParseString("").WithFallback(RemoteConfigFactory.Default()))
         {
         }
@@ -79,6 +113,27 @@ namespace Akka.Remote.Tests.Serialization
         {
             var actorIdentity = new ActorIdentity("message", null);
             AssertEqual(actorIdentity);
+        }
+
+        [Fact(Skip = "Not supported")]
+        public void Can_serialize_ExceptionNoDefaultConstuctor()
+        {
+            var exception = new TestExceptionNoDefaultConstuctor("error");
+            AssertAndReturn(exception).Should().BeOfType<TestExceptionNoDefaultConstuctor>();
+        }
+
+        [Fact(Skip = "Not supported")]
+        public void Can_serialize_Exception()
+        {
+            var exception = new TestException("err");
+            AssertEqual(exception);
+        }
+
+        [Fact(Skip = "Not supported")]
+        public void Can_serialize_ExceptionWithInnerException()
+        {
+            var exception = new TestException("err", new TestException("inner Error"));
+            AssertEqual(exception);
         }
 
         [Fact]
@@ -166,22 +221,6 @@ namespace Akka.Remote.Tests.Serialization
             AssertEqual(fromConfig);
         }
 
-        [Fact(Skip = "Not implemented yet")]
-        public void Can_serialize_FromConfigWithSuperviseStrategy()
-        {
-            var decider = Decider.From(
-                Directive.Restart,
-                Directive.Stop.When<ArgumentException>(),
-                Directive.Stop.When<NullReferenceException>());
-
-            var supervisor = new OneForOneStrategy(decider);
-
-            var fromConfig = FromConfig.Instance.WithSupervisorStrategy(supervisor);
-            var actual = AssertAndReturn(fromConfig);
-            actual.Should().Be(fromConfig);
-            actual.SupervisorStrategy.Should().Be(fromConfig.SupervisorStrategy); // TODO: supervisor strategy is not using in the serialization
-        }
-
         [Fact]
         public void Can_serialize_DefaultResizer()
         {
@@ -218,30 +257,6 @@ namespace Akka.Remote.Tests.Serialization
                 usePoolDispatcher: true);
 
             AssertEqual(message);
-        }
-
-        [Fact(Skip = "Not implemented yet")]
-        public void Can_serialize_RoundRobinPoolWithCustomSupervisorStrategy()
-        {
-            var defaultResizer = new DefaultResizer(2, 4, 1, 0.5, 0.2, 0.1, 55);
-
-            var decider = Decider.From(
-                Directive.Restart,
-                Directive.Stop.When<ArgumentException>(),
-                Directive.Stop.When<NullReferenceException>());
-
-            var supervisor = new OneForOneStrategy(decider);
-
-            var message = new RoundRobinPool(
-                nrOfInstances: 25,
-                resizer: defaultResizer,
-                supervisorStrategy: supervisor,
-                routerDispatcher: Dispatchers.DefaultDispatcherId,
-                usePoolDispatcher: true);
-
-            var actual = AssertAndReturn(message);
-            actual.Should().Be(message);
-            actual.SupervisorStrategy.Should().Be(message.SupervisorStrategy); // TODO: supervisor strategy is not using in the serialization
         }
 
         [Fact]

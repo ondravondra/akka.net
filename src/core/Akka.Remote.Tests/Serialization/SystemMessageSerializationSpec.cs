@@ -43,40 +43,42 @@ namespace Akka.Remote.Tests.Serialization
         {
         }
 
-        [Fact]
+        [Fact(Skip = "Not implemented")]
         public void Can_serialize_Create()
         {
             var message = new Create(null);
             AssertEqual(message);
         }
 
-        [Fact]
+        [Fact(Skip = "Not implemented")]
         public void Can_serialize_CreateWithException()
         {
             var actorRef = ActorOf<BlackHoleActor>();
             var message = new Create(new ActorInitializationException(actorRef, "Failed"));
-            AssertEqual(message);
+            var actual = AssertAndReturn(message);
+            actual.Failure.Actor.Should().Be(actorRef);
+            actual.Failure.Message.Should().Be(message.Failure.Message);
         }
 
-        [Fact]
+        [Fact(Skip = "Not implemented")]
         public void Can_serialize_Recreate()
         {
-            var message = new Recreate(new Exception("test2"));
-            AssertEqual(message);
+            var message = new Recreate(new MiscMessageSerializerSpec.TestException("test2"));
+            AssertAndReturn(message).Cause.Should().Be(message.Cause);
         }
 
-        [Fact]
+        [Fact(Skip = "Not implemented")]
         public void Can_serialize_Suspend()
         {
             var message = new Suspend();
             AssertAndReturn(message).Should().BeOfType<Suspend>();
         }
 
-        [Fact]
+        [Fact(Skip = "Not implemented")]
         public void Can_serialize_Resume()
         {
-            var message = new Resume(new Exception("test2"));
-            AssertEqual(message);
+            var message = new Resume(new MiscMessageSerializerSpec.TestException("test2"));
+            AssertAndReturn(message).CausedByFailure.Should().Be(message.CausedByFailure);
         }
 
         [Fact]
@@ -114,12 +116,15 @@ namespace Akka.Remote.Tests.Serialization
             AssertEqual(unwatch);
         }
 
-        [Fact]
+        [Fact(Skip = "Not implemented")]
         public void Can_serialize_Failed()
         {
             var actorRef = ActorOf<BlackHoleActor>();
-            var message = new Failed(actorRef, new Exception("test2"), 435345);
-            AssertEqual(message);
+            var message = new Failed(actorRef, new MiscMessageSerializerSpec.TestException("test2"), 435345);
+            var actual = AssertAndReturn(message);
+            actual.Cause.Should().Be(message.Cause);
+            actual.Child.Should().Be(actorRef);
+            actual.Uid.Should().Be(message.Uid);
         }
 
         [Fact]
