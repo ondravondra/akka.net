@@ -27,7 +27,6 @@ namespace Akka.Remote.Tests.Serialization
         public void Can_serialize_ProtobufMessage()
         {
             ProtobufSerializer.RegisterFileDescriptor(ContainerFormatsReflection.Descriptor);
-            ProtobufSerializer.RegisterAssemblyFileDescriptors();
             var message = new AddressData();
             message.System = "sys";
             message.Hostname = "localhost";

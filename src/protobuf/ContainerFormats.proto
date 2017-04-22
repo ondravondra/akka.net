@@ -10,19 +10,17 @@ package Akka.Remote.Serialization.Proto.Msg;
 *******************************************/
 
 message SelectionEnvelope {
-  bytes enclosedMessage = 1;
-  int32 serializerId = 2;
-  repeated Selection pattern = 3;
-  bytes messageManifest = 4;
-}
-
-enum PatternType {
-  PARENT = 0;
-  CHILD_NAME = 1;
-  CHILD_PATTERN = 2;
+  Payload payload = 1;
+  repeated Selection pattern = 2;
 }
 
 message Selection {
+  enum PatternType {
+    NO_PATERN = 0;
+    PARENT = 1;
+    CHILD_NAME = 2;
+    CHILD_PATTERN = 3;
+  }
   PatternType type = 1;
   string matcher = 2;
 }
@@ -33,22 +31,22 @@ message Selection {
 
 // Defines a remote ActorRef that "remembers" and uses its original Actor instance on the original node.
 message ActorRefData {
-	string path = 1;
+  string path = 1;
 }
 
 // Defines a remote address.
 message AddressData {
-	string system = 1;
-	string hostname = 2;
-	uint32 port = 3;
-	string protocol = 4;
+  string system = 1;
+  string hostname = 2;
+  uint32 port = 3;
+  string protocol = 4;
 }
 
 // Defines a payload.
 message Payload {
-	bytes message = 1;
-	int32 serializerId = 2;
-	bytes messageManifest = 3;
+  bytes message = 1;
+  int32 serializerId = 2;
+  bytes messageManifest = 3;
 }
 
 message Identify {
@@ -62,4 +60,28 @@ message ActorIdentity {
 
 message RemoteWatcherHeartbeatResponse {
   uint64 uid = 1;
+}
+
+/******************************************
+  Exceptions
+*******************************************/
+
+message ExceptionData {
+  string className = 1;
+  string message = 2;
+  Payload cause = 3;
+  repeated StackTraceElement stackTrace = 4;
+}
+
+message ActorInitializationException {
+  ActorRefData actor = 1;
+  string message = 2;
+  Payload cause = 3;
+}
+
+message StackTraceElement {
+  string className = 1;
+  string methodName = 2;
+  string fileName = 3;
+  int32 lineNumber = 4;
 }

@@ -1,4 +1,5 @@
 ﻿[assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute("Akka.Cluster")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute("Akka.Cluster.Sharding")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute("Akka.Cluster.TestKit")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute("Akka.Cluster.Tests")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute("Akka.Cluster.Tests.MultiNode")]
@@ -118,11 +119,6 @@ namespace Akka.Remote
         bool IsMonitoring(T resource);
         void Remove(T resource);
         void Reset();
-    }
-    public class static MessageSerializer
-    {
-        public static object Deserialize(Akka.Actor.ActorSystem system, Akka.Remote.Serialization.Proto.Msg.Payload messageProtocol) { }
-        public static Akka.Remote.Serialization.Proto.Msg.Payload Serialize(Akka.Actor.ActorSystem system, Akka.Actor.Address address, object message) { }
     }
     public class PhiAccrualFailureDetector : Akka.Remote.FailureDetector
     {
@@ -386,7 +382,6 @@ namespace Akka.Remote.Serialization
     public class DaemonMsgCreateSerializer : Akka.Serialization.Serializer
     {
         public DaemonMsgCreateSerializer(Akka.Actor.ExtendedActorSystem system) { }
-        public override int Identifier { get; }
         public override bool IncludeManifest { get; }
         public override object FromBinary(byte[] bytes, System.Type type) { }
         public override byte[] ToBinary(object obj) { }
@@ -394,7 +389,6 @@ namespace Akka.Remote.Serialization
     public class MessageContainerSerializer : Akka.Serialization.Serializer
     {
         public MessageContainerSerializer(Akka.Actor.ExtendedActorSystem system) { }
-        public override int Identifier { get; }
         public override bool IncludeManifest { get; }
         public override object FromBinary(byte[] bytes, System.Type type) { }
         public override byte[] ToBinary(object obj) { }
@@ -416,53 +410,17 @@ namespace Akka.Remote.Serialization
     public class ProtobufSerializer : Akka.Serialization.Serializer
     {
         public ProtobufSerializer(Akka.Actor.ExtendedActorSystem system) { }
-        public override int Identifier { get; }
+        public override bool IncludeManifest { get; }
+        public override object FromBinary(byte[] bytes, System.Type type) { }
+        public static void RegisterFileDescriptor(Google.Protobuf.Reflection.FileDescriptor fd) { }
+        public override byte[] ToBinary(object obj) { }
+    }
+    public sealed class SystemMessageSerializer : Akka.Serialization.Serializer
+    {
+        public SystemMessageSerializer(Akka.Actor.ExtendedActorSystem system) { }
         public override bool IncludeManifest { get; }
         public override object FromBinary(byte[] bytes, System.Type type) { }
         public override byte[] ToBinary(object obj) { }
-    }
-}
-namespace Akka.Remote.Serialization.Proto.Msg
-{
-    public sealed class ActorRefData : Google.Protobuf.IDeepCloneable<Akka.Remote.Serialization.Proto.Msg.ActorRefData>, Google.Protobuf.IMessage, Google.Protobuf.IMessage<Akka.Remote.Serialization.Proto.Msg.ActorRefData>, System.IEquatable<Akka.Remote.Serialization.Proto.Msg.ActorRefData>
-    {
-        public const int PathFieldNumber = 1;
-        public ActorRefData() { }
-        public ActorRefData(Akka.Remote.Serialization.Proto.Msg.ActorRefData other) { }
-        public static Google.Protobuf.Reflection.MessageDescriptor Descriptor { get; }
-        public static Google.Protobuf.MessageParser<Akka.Remote.Serialization.Proto.Msg.ActorRefData> Parser { get; }
-        public string Path { get; set; }
-        public int CalculateSize() { }
-        public Akka.Remote.Serialization.Proto.Msg.ActorRefData Clone() { }
-        public override bool Equals(object other) { }
-        public bool Equals(Akka.Remote.Serialization.Proto.Msg.ActorRefData other) { }
-        public override int GetHashCode() { }
-        public void MergeFrom(Akka.Remote.Serialization.Proto.Msg.ActorRefData other) { }
-        public void MergeFrom(Google.Protobuf.CodedInputStream input) { }
-        public override string ToString() { }
-        public void WriteTo(Google.Protobuf.CodedOutputStream output) { }
-    }
-    public sealed class Payload : Google.Protobuf.IDeepCloneable<Akka.Remote.Serialization.Proto.Msg.Payload>, Google.Protobuf.IMessage, Google.Protobuf.IMessage<Akka.Remote.Serialization.Proto.Msg.Payload>, System.IEquatable<Akka.Remote.Serialization.Proto.Msg.Payload>
-    {
-        public const int MessageFieldNumber = 1;
-        public const int MessageManifestFieldNumber = 3;
-        public const int SerializerIdFieldNumber = 2;
-        public Payload() { }
-        public Payload(Akka.Remote.Serialization.Proto.Msg.Payload other) { }
-        public static Google.Protobuf.Reflection.MessageDescriptor Descriptor { get; }
-        public Google.Protobuf.ByteString Message { get; set; }
-        public Google.Protobuf.ByteString MessageManifest { get; set; }
-        public static Google.Protobuf.MessageParser<Akka.Remote.Serialization.Proto.Msg.Payload> Parser { get; }
-        public int SerializerId { get; set; }
-        public int CalculateSize() { }
-        public Akka.Remote.Serialization.Proto.Msg.Payload Clone() { }
-        public override bool Equals(object other) { }
-        public bool Equals(Akka.Remote.Serialization.Proto.Msg.Payload other) { }
-        public override int GetHashCode() { }
-        public void MergeFrom(Akka.Remote.Serialization.Proto.Msg.Payload other) { }
-        public void MergeFrom(Google.Protobuf.CodedInputStream input) { }
-        public override string ToString() { }
-        public void WriteTo(Google.Protobuf.CodedOutputStream output) { }
     }
 }
 namespace Akka.Remote.Transport

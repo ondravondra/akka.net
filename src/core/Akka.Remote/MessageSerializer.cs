@@ -16,7 +16,7 @@ namespace Akka.Remote
     /// <summary>
     /// Class MessageSerializer.
     /// </summary>
-    public static class MessageSerializer
+    internal static class MessageSerializer
     {
         /// <summary>
         /// Deserializes the specified message.
